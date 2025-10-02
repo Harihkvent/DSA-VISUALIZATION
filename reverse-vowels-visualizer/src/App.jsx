@@ -26,7 +26,6 @@ const ReverseVowelsVisualization = () => {
     });
 
     while (left < right) {
-      // Move left pointer to find vowel
       while (left < right && !vowels.includes(chars[left])) {
         allSteps.push({
           chars: [...chars],
@@ -40,7 +39,6 @@ const ReverseVowelsVisualization = () => {
         left++;
       }
 
-      // Move right pointer to find vowel
       while (left < right && !vowels.includes(chars[right])) {
         allSteps.push({
           chars: [...chars],
@@ -65,7 +63,6 @@ const ReverseVowelsVisualization = () => {
           swapping: true
         });
 
-        // Swap
         [chars[left], chars[right]] = [chars[right], chars[left]];
 
         allSteps.push({
@@ -122,121 +119,125 @@ const ReverseVowelsVisualization = () => {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-8 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-lg">
-      <h1 className="text-3xl font-bold text-center mb-2 text-indigo-900">
-        Reverse Vowels Algorithm
-      </h1>
-      <p className="text-center text-gray-600 mb-6">Two-pointer approach to swap vowels</p>
+    <div className="fixed inset-0 w-screen h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 overflow-auto">
+      <div className="w-full max-w-4xl px-6 py-8 mx-auto">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold mb-3 text-white">
+            Reverse Vowels Algorithm
+          </h1>
+          <p className="text-blue-200 text-lg">Two-pointer approach to swap vowels</p>
+        </div>
 
-      <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
-          Input String (letters only):
-        </label>
-        <input
-          type="text"
-          value={inputString}
-          onChange={handleInputChange}
-          className="w-full px-4 py-2 border-2 border-indigo-300 rounded-lg focus:outline-none focus:border-indigo-500"
-          placeholder="Enter a string..."
-        />
-      </div>
+        <div className="bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-2xl shadow-2xl mb-6">
+          <label className="block text-sm font-semibold text-white mb-3">
+            Input String (letters only):
+          </label>
+          <input
+            type="text"
+            value={inputString}
+            onChange={handleInputChange}
+            className="w-full px-4 py-3 bg-white/90 border-2 border-blue-300 rounded-xl focus:outline-none focus:border-blue-500 text-gray-900 text-lg"
+            placeholder="Enter a string..."
+          />
+        </div>
 
-      <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-        <div className="flex justify-center items-center gap-2 mb-8">
-          {currentStep && currentStep.chars.map((char, idx) => {
-            const isLeft = idx === currentStep.left;
-            const isRight = idx === currentStep.right;
-            const isVowel = vowels.includes(char);
-            
-            let bgColor = 'bg-gray-100';
-            if (currentStep.complete) {
-              bgColor = isVowel ? 'bg-green-200' : 'bg-gray-100';
-            } else if (currentStep.swapping && (isLeft || isRight)) {
-              bgColor = 'bg-yellow-300';
-            } else if (isLeft && currentStep.leftScanning) {
-              bgColor = 'bg-blue-300';
-            } else if (isRight && currentStep.rightScanning) {
-              bgColor = 'bg-purple-300';
-            } else if (isLeft || isRight) {
-              bgColor = 'bg-indigo-200';
-            }
+        <div className="bg-white/10 backdrop-blur-md border border-white/20 p-8 rounded-2xl shadow-2xl mb-6">
+          <div className="flex flex-wrap justify-center items-center gap-3 mb-8">
+            {currentStep && currentStep.chars.map((char, idx) => {
+              const isLeft = idx === currentStep.left;
+              const isRight = idx === currentStep.right;
+              const isVowel = vowels.includes(char);
+              
+              let bgColor = 'bg-slate-700';
+              if (currentStep.complete) {
+                bgColor = isVowel ? 'bg-green-500' : 'bg-slate-700';
+              } else if (currentStep.swapping && (isLeft || isRight)) {
+                bgColor = 'bg-yellow-400';
+              } else if (isLeft && currentStep.leftScanning) {
+                bgColor = 'bg-blue-400';
+              } else if (isRight && currentStep.rightScanning) {
+                bgColor = 'bg-purple-400';
+              } else if (isLeft || isRight) {
+                bgColor = 'bg-indigo-400';
+              }
 
-            return (
-              <div key={idx} className="flex flex-col items-center">
-                <div
-                  className={`w-12 h-12 flex items-center justify-center text-xl font-bold rounded-lg ${bgColor} transition-all duration-300 border-2 ${
-                    (isLeft || isRight) ? 'border-indigo-600 scale-110' : 'border-gray-300'
-                  }`}
-                >
-                  {char}
+              return (
+                <div key={idx} className="flex flex-col items-center">
+                  <div
+                    className={`w-14 h-14 flex items-center justify-center text-2xl font-bold rounded-xl ${bgColor} transition-all duration-300 border-2 ${
+                      (isLeft || isRight) ? 'border-white shadow-lg scale-110' : 'border-white/30'
+                    } text-white`}
+                  >
+                    {char}
+                  </div>
+                  <div className="text-sm mt-2 h-5 font-bold">
+                    {isLeft && <span className="text-blue-300">L</span>}
+                    {isRight && <span className="text-purple-300">R</span>}
+                  </div>
                 </div>
-                <div className="text-xs mt-1 h-4 font-semibold">
-                  {isLeft && <span className="text-blue-600">L</span>}
-                  {isRight && <span className="text-purple-600">R</span>}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="text-center mb-4 h-12 flex items-center justify-center">
-          <p className="text-lg font-medium text-gray-700">
-            {currentStep ? currentStep.description : ''}
-          </p>
-        </div>
-
-        <div className="flex justify-center gap-4">
-          <button
-            onClick={() => {
-              setStep(0);
-              setIsPlaying(false);
-            }}
-            className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors flex items-center gap-2"
-          >
-            <RotateCcw size={18} />
-            Reset
-          </button>
-          <button
-            onClick={() => setIsPlaying(!isPlaying)}
-            disabled={step >= steps.length - 1}
-            className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:bg-gray-300 flex items-center gap-2"
-          >
-            <Play size={18} />
-            {isPlaying ? 'Pause' : 'Play'}
-          </button>
-          <button
-            onClick={() => setStep(Math.min(step + 1, steps.length - 1))}
-            disabled={step >= steps.length - 1}
-            className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:bg-gray-300 flex items-center gap-2"
-          >
-            <SkipForward size={18} />
-            Next
-          </button>
-        </div>
-
-        <div className="mt-4 text-center text-sm text-gray-600">
-          Step {step + 1} of {steps.length}
-        </div>
-      </div>
-
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h3 className="font-bold text-lg mb-3 text-indigo-900">Legend:</h3>
-        <div className="grid grid-cols-2 gap-3 text-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-300 rounded border-2 border-indigo-600"></div>
-            <span>Left pointer scanning</span>
+              );
+            })}
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-purple-300 rounded border-2 border-indigo-600"></div>
-            <span>Right pointer scanning</span>
+
+          <div className="text-center mb-6 min-h-16 flex items-center justify-center px-4">
+            <p className="text-xl font-semibold text-white">
+              {currentStep ? currentStep.description : ''}
+            </p>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-yellow-300 rounded border-2 border-indigo-600"></div>
-            <span>Swapping vowels</span>
+
+          <div className="flex justify-center gap-4 mb-4">
+            <button
+              onClick={() => {
+                setStep(0);
+                setIsPlaying(false);
+              }}
+              className="px-8 py-3 bg-slate-600 text-white rounded-xl hover:bg-slate-700 transition-all flex items-center gap-2 text-base font-semibold shadow-lg"
+            >
+              <RotateCcw size={20} />
+              Reset
+            </button>
+            <button
+              onClick={() => setIsPlaying(!isPlaying)}
+              disabled={step >= steps.length - 1}
+              className="px-8 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all disabled:bg-slate-600 disabled:opacity-50 flex items-center gap-2 text-base font-semibold shadow-lg"
+            >
+              <Play size={20} />
+              {isPlaying ? 'Pause' : 'Play'}
+            </button>
+            <button
+              onClick={() => setStep(Math.min(step + 1, steps.length - 1))}
+              disabled={step >= steps.length - 1}
+              className="px-8 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all disabled:bg-slate-600 disabled:opacity-50 flex items-center gap-2 text-base font-semibold shadow-lg"
+            >
+              <SkipForward size={20} />
+              Next
+            </button>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-green-200 rounded border-2 border-gray-300"></div>
-            <span>Final vowel position</span>
+
+          <div className="text-center text-white/80 font-medium">
+            Step {step + 1} of {steps.length}
+          </div>
+        </div>
+
+        <div className="bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-2xl shadow-2xl">
+          <h3 className="font-bold text-xl mb-4 text-white">Legend:</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-400 rounded-lg border-2 border-white shadow-md"></div>
+              <span className="text-white font-medium">Left pointer scanning</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-purple-400 rounded-lg border-2 border-white shadow-md"></div>
+              <span className="text-white font-medium">Right pointer scanning</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-yellow-400 rounded-lg border-2 border-white shadow-md"></div>
+              <span className="text-white font-medium">Swapping vowels</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-green-500 rounded-lg border-2 border-white shadow-md"></div>
+              <span className="text-white font-medium">Final vowel position</span>
+            </div>
           </div>
         </div>
       </div>
@@ -245,4 +246,3 @@ const ReverseVowelsVisualization = () => {
 };
 
 export default ReverseVowelsVisualization;
-
