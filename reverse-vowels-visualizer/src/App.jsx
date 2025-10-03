@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Play, Pause, SkipForward, SkipBack } from 'lucide-react';
+import Footer from './components/Footer'; // adjust path as needed
 
 /* ---------- parsers & generators (kept intact, safe guards kept) ---------- */
 
@@ -14,7 +15,7 @@ function parseNumberList(str) {
 }
 
 function parseOps(str) {
-  if (!str) return [];
+  if (!str || typeof str !== 'string') return [];
   return str.split(',').map(tok => tok.trim()).filter(Boolean).map(tok => {
     const [a, b] = tok.split(':').map(s => s.trim());
     if (a.toLowerCase() === 'push') return { type: 'push', val: Number(b) };
@@ -26,7 +27,7 @@ function parseOps(str) {
 }
 
 function parseAdjList(str) {
-  if (!str) return null;
+  if (!str || typeof str !== 'string') return null;
   str = str.trim();
   try {
     if (str.startsWith('[')) {
@@ -35,19 +36,24 @@ function parseAdjList(str) {
     }
   } catch (e) {}
   const parts = str.split(';').map(p => p.trim()).filter(Boolean);
+  if (parts.length === 0) return null;
   const adj = [];
   for (const p of parts) {
     const [idx, rest] = p.split(':').map(s => s.trim());
     if (!idx) continue;
     const i = Number(idx);
+    if (!Number.isFinite(i)) continue;
     const neis = rest ? rest.split(',').map(s => Number(s.trim())).filter(n => Number.isFinite(n)) : [];
     adj[i] = neis;
   }
-  for (let i = 0; i < (adj.length || 0); i++) if (!Array.isArray(adj[i])) adj[i] = [];
-  return adj.length ? adj : null;
+  // normalize to full array
+  const maxIndex = Math.max(-1, ...adj.map((v, i) => (v === undefined ? -1 : i)));
+  const out = [];
+  for (let i = 0; i <= maxIndex; i++) out[i] = Array.isArray(adj[i]) ? adj[i] : [];
+  return out.length ? out : null;
 }
 
-/* ---------- step generators (unchanged from your original code) ---------- */
+/* ---------- step generators ---------- */
 
 function genBubbleSort(a) {
   const arr = [...a];
@@ -156,7 +162,7 @@ function genBinaryTreeTraversal(root) {
   return steps;
 }
 
-/* ---------- DSAVisualizer component (UI updates for centering/professional look) ---------- */
+/* ---------- DSAVisualizer component ---------- */
 
 export default function DSAVisualizer() {
   const concepts = useMemo(() => ({
@@ -172,6 +178,7 @@ export default function DSAVisualizer() {
   const [concept, setConcept] = useState(Object.keys(concepts)[0]);
   const [algorithm, setAlgorithm] = useState(concepts[Object.keys(concepts)[0]][0]);
 
+  // inputs (no "hidden" defaults; user must provide input before Apply for most cases)
   const [inputArrayString, setInputArrayString] = useState('');
   const [inputArray, setInputArray] = useState([]);
   const [inputOpsString, setInputOpsString] = useState('');
@@ -179,6 +186,7 @@ export default function DSAVisualizer() {
   const [inputStr, setInputStr] = useState('');
   const [kWindow, setKWindow] = useState(3);
   const [target, setTarget] = useState('');
+  const [fibN, setFibN] = useState(8);
 
   const [steps, setSteps] = useState([]);
   const [index, setIndex] = useState(0);
@@ -225,8 +233,8 @@ export default function DSAVisualizer() {
           s = genMaxSubarrayWindow(arr, Number(kWindow));
         }
       } else if (concept === 'Data Structures') {
-        if (algorithm === 'Stack') { const useOps = ops.length ? ops : [{type:'push',val:1},{type:'push',val:2},{type:'pop'}]; s = genStackOps(useOps); }
-        if (algorithm === 'Queue') { const useOps = ops.length ? ops : [{type:'enqueue',val:1},{type:'enqueue',val:2},{type:'dequeue'}]; s = genQueueOps(useOps); }
+        if (algorithm === 'Stack') { if (ops.length === 0) throw new Error('Provide operations for Stack (e.g. push:1,push:2,pop).'); s = genStackOps(ops); }
+        if (algorithm === 'Queue') { if (ops.length === 0) throw new Error('Provide operations for Queue (e.g. enqueue:1,enqueue:2,dequeue).'); s = genQueueOps(ops); }
         if (algorithm === 'LinkedList Reverse') { if (arr.length === 0) throw new Error('Provide input array to create list nodes.'); s = genLinkedListReverse(arr); }
         if (algorithm === 'Heapify') { if (arr.length === 0) throw new Error('Provide input array.'); s = genHeapify(arr); }
       } else if (concept === 'Graphs') {
@@ -239,7 +247,7 @@ export default function DSAVisualizer() {
         s = genBinaryTreeTraversal(sampleTree);
       } else if (concept === 'Algorithms') {
         if (algorithm === 'Kadane (Max Subarray)') { if (arr.length === 0) throw new Error('Provide input array.'); s = genKadane(arr); }
-        if (algorithm === 'Fibonacci DP') s = genFibDP(8);
+        if (algorithm === 'Fibonacci DP') { if (!Number.isFinite(Number(fibN)) || fibN < 0) throw new Error('Provide a non-negative integer n for Fibonacci DP.'); s = genFibDP(Number(fibN)); }
       }
     } catch (err) {
       s = [{ meta: {}, description: `Error: ${String(err.message || err)}` }];
@@ -272,43 +280,66 @@ export default function DSAVisualizer() {
           'rounded-lg', 'font-bold', 'text-white', 'text-lg',
           'transition-transform', 'duration-200', 'shadow-md'
         ];
-        if (meta && meta.comparing && meta.comparing.includes(i)) classes.push('bg-blue-500 scale-105');
-        else if (meta && meta.swapped && meta.swapped.includes(i)) classes.push('bg-yellow-500 scale-105');
+        // highlight window
+        if (meta && meta.window && i >= meta.window[0] && i <= meta.window[1]) classes.push('bg-blue-500 scale-105');
+        else if (meta && meta.best && i >= meta.best[0] && i <= meta.best[1]) classes.push('bg-green-500 scale-105');
+        else if (meta && meta.comparing && meta.comparing.includes(i)) classes.push('bg-indigo-500 scale-105');
+        else if (meta && meta.shifting && meta.shifting.includes(i)) classes.push('bg-yellow-500 scale-105');
+        else if (meta && meta.swapped && meta.swapped.includes(i)) classes.push('bg-yellow-400 scale-105 text-black');
         else if (meta && meta.pivotIndex === i) classes.push('bg-purple-500 scale-105');
-        else if (meta && meta.passEnd === i) classes.push('bg-green-600');
+        else if (meta && (meta.mid === i || (Array.isArray(meta.found) ? meta.found.includes(i) : meta.found === i))) classes.push('bg-amber-500 scale-105');
         else classes.push('bg-slate-700');
         return (<div key={i} className={classes.join(' ')}>{String(v)}</div>);
       })}
     </div>
   );
 
-  const renderNodes = (nodes, meta = {}) => (
-    <div className="flex gap-6 items-center justify-center flex-wrap">
-      {(nodes || []).map((n) => (
-        <div key={n.id} className="flex items-center gap-2">
-          <div className={`px-3 py-2 rounded-md border font-medium transition-shadow ${meta.reversing === n.id ? 'bg-yellow-400 shadow-lg' : 'bg-slate-700 text-white shadow'}`}>{n.val}</div>
-          <div className="text-white/60">→</div>
-        </div>
-      ))}
-      <div className="text-white/80">null</div>
-    </div>
-  );
+  const renderNodes = (nodes = [], meta = {}) => {
+    // prefer to show linked-list order starting from head (meta.head) or compute head
+    let order = [];
+    if (meta && Number.isFinite(meta.head)) {
+      let curId = meta.head;
+      const seen = new Set();
+      while (curId !== null && curId !== undefined && !seen.has(curId) && nodes[curId]) { order.push(nodes[curId]); seen.add(curId); curId = nodes[curId].next; }
+    }
+    if (order.length === 0) {
+      // compute head as node that is not referenced by any next
+      const referenced = new Set(nodes.map(n => n.next).filter(n => n !== null && n !== undefined));
+      const headIdx = nodes.find(n => !referenced.has(n.id))?.id ?? null;
+      if (headIdx !== null && headIdx !== undefined) {
+        let curId = headIdx; const seen = new Set();
+        while (curId !== null && curId !== undefined && !seen.has(curId) && nodes[curId]) { order.push(nodes[curId]); seen.add(curId); curId = nodes[curId].next; }
+      } else order = nodes.slice();
+    }
 
-  const renderTree = (tree, meta = {}) => (
+    return (
+      <div className="flex gap-6 items-center justify-center flex-wrap">
+        {order.map((n, idx) => (
+          <div key={n.id} className="flex items-center gap-2">
+            <div className={`px-3 py-2 rounded-md border font-medium transition-shadow ${meta.reversing === n.id ? 'bg-yellow-400 shadow-lg text-black' : 'bg-slate-700 text-white shadow'}`}>{n.val}</div>
+            <div className="text-white/60">→</div>
+          </div>
+        ))}
+        <div className="text-white/80">null</div>
+      </div>
+    );
+  };
+
+  const renderTree = (tree = [], meta = {}) => (
     <div className="flex flex-col items-center gap-6">
       <div className="flex gap-3 flex-wrap justify-center">
         {(tree || []).map((n) => (
-          <div key={n.id} className={`px-4 py-2 rounded-md transition-transform ${meta.visiting === n.id ? 'bg-yellow-400 scale-105 shadow-lg' : 'bg-slate-700 text-white shadow'}`}>{n.val}</div>
+          <div key={n.id} className={`px-4 py-2 rounded-md transition-transform ${meta.visiting === n.id ? 'bg-yellow-400 scale-105 shadow-lg text-black' : 'bg-slate-700 text-white shadow'}`}>{n.val}</div>
         ))}
       </div>
       <div className="text-sm text-white/80">(Nodes shown left-to-right by id — traversal highlights visiting nodes)</div>
     </div>
   );
 
-  const renderGraph = (adj, meta = {}) => (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+  const renderGraph = (adj = [], meta = {}) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
       {(adj || []).map((neis, i) => (
-        <div key={i} className={`p-3 rounded-md transition-shadow ${meta.visiting === i ? 'bg-yellow-400 shadow-lg' : 'bg-slate-700 text-white shadow'}`}>
+        <div key={i} className={`p-3 rounded-md transition-shadow ${meta.visiting === i ? 'bg-yellow-400 shadow-lg text-black' : 'bg-slate-700 text-white shadow'}`}>
           <div className="font-bold">{i}</div>
           <div className="text-sm text-white/80">→ {Array.isArray(neis) ? neis.join(', ') : ''}</div>
         </div>
@@ -350,188 +381,204 @@ export default function DSAVisualizer() {
     setSteps([]);
     setIndex(0);
     setPlaying(false);
+    // keep inputs but clear parsed array
+    setInputArray([]);
   }
 
-  /* ---------- JSX (centered, polished layout) ---------- */
-  /* ---------- Replace your current `return(...)` with this block ---------- */
-return (
-  /* fixed inset-0 makes the app occupy the entire viewport */
-  <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white overflow-hidden">
-    {/* top-level vertical layout: header + main */}
-    <div className="flex flex-col h-full w-full">
-      {/* Header — stays at the top; compact so the rest of screen is usable */}
-      <header className="flex-none py-6 px-8 border-b border-white/8">
-        <div className="max-w-full">
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">DSA Visualizer</h1>
-          <p className="text-sm text-white/70 mt-2">Interactive steps and visual explanations for common algorithms & data structures — now full-screen.</p>
-        </div>
-      </header>
+  /* ---------- JSX ---------- */
+  return (
+    <div className="min-h-screen w-full bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white">
+      <div className="flex flex-col min-h-screen">
+        <header className="flex-none py-6 px-8 border-b border-white/8">
+          <div className="max-w-full">
+            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">DSA Visualizer</h1>
+            <p className="text-sm text-white/70 mt-2">Interactive steps and visual explanations for common algorithms & data structures.</p>
+          </div>
+        </header>
 
-      {/* Main content fills remaining height. Use overflow-auto so it scrolls when needed. */}
-      <main className="flex-1 overflow-auto p-6">
-        {/* Use a 12-column grid so we can allocate exact proportions:
-            - left: 5/12 (~41.6%) for controls
-            - right: 7/12 (~58.4%) for visualization & legend
-         */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-full">
-          {/* LEFT column: Controls (spans 5/12 on md+) */}
-          <div className="md:col-span-5 flex flex-col h-full">
-            <div className="flex-1 bg-neutral-800/60 rounded-2xl border border-white/6 p-6 shadow-inner h-full">
-              <div className="flex flex-col h-full">
-                <div className="flex gap-3 mb-4">
-                  <select value={concept} onChange={(e) => setConcept(e.target.value)} className="flex-1 px-4 py-2 rounded-lg bg-neutral-700 text-white border border-white/6">
-                    {Object.keys(concepts).map((c) => (<option key={c} value={c}>{c}</option>))}
-                  </select>
-                  <select value={algorithm} onChange={(e) => setAlgorithm(e.target.value)} className="w-44 px-4 py-2 rounded-lg bg-neutral-700 text-white border border-white/6">
-                    {concepts[concept].map((alg) => (<option key={alg} value={alg}>{alg}</option>))}
-                  </select>
+        <main className="flex-1 overflow-auto p-6">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-full">
+            <div className="md:col-span-5 flex flex-col h-full">
+              <div className="flex-1 bg-neutral-800/60 rounded-2xl border border-white/6 p-6 shadow-inner h-full">
+                <div className="flex flex-col h-full">
+                  <div className="flex gap-3 mb-4">
+                    <select value={concept} onChange={(e) => setConcept(e.target.value)} className="flex-1 px-4 py-2 rounded-lg bg-neutral-700 text-white border border-white/6">
+                      {Object.keys(concepts).map((c) => (<option key={c} value={c}>{c}</option>))}
+                    </select>
+                    <select value={algorithm} onChange={(e) => setAlgorithm(e.target.value)} className="w-44 px-4 py-2 rounded-lg bg-neutral-700 text-white border border-white/6">
+                      {concepts[concept].map((alg) => (<option key={alg} value={alg}>{alg}</option>))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-4 mb-4">
+                    {(concept === 'Sorting' || concept === 'Searching' || (concept === 'Data Structures' && ['Heapify', 'LinkedList Reverse'].includes(algorithm)) || (concept === 'Algorithms' && ['Kadane (Max Subarray)'].includes(algorithm)) || (concept === 'Trees')) && (
+                      <div>
+                        <label className="block mb-1 text-sm font-medium text-white/80">Input Array</label>
+                        <input type="text" value={inputArrayString} onChange={(e) => setInputArrayString(e.target.value)} className="w-full px-4 py-2 rounded-lg bg-neutral-700 text-white border border-white/6" placeholder="e.g. 5,3,8,1,2" />
+                      </div>
+                    )}
+
+                    {concept === 'Searching' && (
+                      <div>
+                        <label className="block mb-1 text-sm font-medium text-white/80">Target Value</label>
+                        <input type="text" value={target} onChange={(e) => setTarget(e.target.value)} className="w-full px-4 py-2 rounded-lg bg-neutral-700 text-white border border-white/6" placeholder="e.g. 3" />
+                      </div>
+                    )}
+
+                    {concept === 'Two Pointers / Sliding Window' && algorithm === 'Reverse Vowels' && (
+                      <div>
+                        <label className="block mb-1 text-sm font-medium text-white/80">Input String</label>
+                        <input type="text" value={inputStr} onChange={(e) => setInputStr(e.target.value)} className="w-full px-4 py-2 rounded-lg bg-neutral-700 text-white border border-white/6" placeholder="e.g. hello world" />
+                      </div>
+                    )}
+
+                    {concept === 'Two Pointers / Sliding Window' && algorithm === 'Max Window Sum (k)' && (
+                      <div>
+                        <label className="block mb-1 text-sm font-medium text-white/80">Window Size (k)</label>
+                        <input type="number" value={kWindow} onChange={(e) => setKWindow(Number(e.target.value))} className="w-full px-4 py-2 rounded-lg bg-neutral-700 text-white border border-white/6" placeholder="e.g. 3" />
+                      </div>
+                    )}
+
+                    {concept === 'Data Structures' && (
+                      <div>
+                        <label className="block mb-1 text-sm font-medium text-white/80">Operations (Stack/Queue)</label>
+                        <input type="text" value={inputOpsString} onChange={(e) => setInputOpsString(e.target.value)} className="w-full px-4 py-2 rounded-lg bg-neutral-700 text-white border border-white/6" placeholder="e.g. push:1,push:2,pop" />
+                        <p className="text-xs text-white/60 mt-1">Format: push:value, pop, enqueue:value, dequeue</p>
+                      </div>
+                    )}
+
+                    {concept === 'Graphs' && (
+                      <div>
+                        <label className="block mb-1 text-sm font-medium text-white/80">Adjacency List</label>
+                        <input type="text" value={inputAdjString} onChange={(e) => setInputAdjString(e.target.value)} className="w-full px-4 py-2 rounded-lg bg-neutral-700 text-white border border-white/6" placeholder="e.g. 0:1,2;1:0;2:0 or JSON" />
+                        <p className="text-xs text-white/60 mt-1">Format: node:neighbor1,neighbor2;... or JSON array</p>
+                      </div>
+                    )}
+
+                    {concept === 'Algorithms' && algorithm === 'Fibonacci DP' && (
+                      <div>
+                        <label className="block mb-1 text-sm font-medium text-white/80">n for Fibonacci DP</label>
+                        <input type="number" value={fibN} onChange={(e) => setFibN(Number(e.target.value))} className="w-full px-4 py-2 rounded-lg bg-neutral-700 text-white border border-white/6" placeholder="e.g. 8" />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-auto flex gap-3 justify-center">
+                    <button onClick={handleApply} className="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 font-semibold">Apply</button>
+                    <button onClick={resetAll} className="px-6 py-2 rounded-lg bg-neutral-700 hover:bg-neutral-600 font-semibold border border-white/6">Reset</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="md:col-span-7 flex flex-col gap-4 h-full">
+              <div className="bg-neutral-800/50 rounded-2xl border border-white/6 p-6 shadow-inner flex flex-col h-full">
+                <h2 className="text-xl font-semibold mb-4">Visualization</h2>
+
+                <div className="flex-1 w-full flex items-center justify-center mb-4 overflow-auto">
+                  <div className="w-full">
+                    {/* show readable error or no-step message if steps empty */}
+                    {steps.length === 0 && (
+                      <div className="text-center text-white/60">No visualization. Enter inputs and click <strong>Apply</strong>.</div>
+                    )}
+
+                    {cur && cur.description && cur.description.startsWith('Error:') && (
+                      <div className="text-center text-red-400 font-semibold">{cur.description}</div>
+                    )}
+
+                    {concept === 'Sorting' && renderArray(cur.arr, cur.meta)}
+                    {concept === 'Searching' && renderArray(cur.arr, cur.meta)}
+                    {concept === 'Two Pointers / Sliding Window' && algorithm === 'Reverse Vowels' && (
+                      <div className="text-center text-2xl font-bold">
+                        {(cur.arr || []).map((ch, i) => {
+                          const classes = ['inline-block', 'px-3', 'py-1', 'm-0.5', 'rounded', 'transition-transform', 'duration-200'];
+                          if (cur.meta && (cur.meta.left === i || cur.meta.right === i)) classes.push('bg-blue-400 text-white scale-105');
+                          else if (cur.meta && cur.meta.swapped && cur.meta.swapped.includes(i)) classes.push('bg-yellow-400 text-black scale-105');
+                          else classes.push('bg-slate-700 text-white');
+                          return (<span key={i} className={classes.join(' ')}>{ch}</span>);
+                        })}
+                      </div>
+                    )}
+                    {concept === 'Two Pointers / Sliding Window' && algorithm === 'Max Window Sum (k)' && renderArray(cur.arr, cur.meta)}
+                    {concept === 'Data Structures' && algorithm !== 'LinkedList Reverse' && renderArray(cur.arr, cur.meta)}
+                    {concept === 'Data Structures' && algorithm === 'LinkedList Reverse' && renderNodes(cur.nodes, cur.meta)}
+                    {concept === 'Graphs' && renderGraph(cur.adj, cur.meta)}
+                    {concept === 'Trees' && renderTree(cur.tree, cur.meta)}
+                    {concept === 'Algorithms' && algorithm === 'Fibonacci DP' && (
+                      <div className="text-center">
+                        {(cur.table || []).map((v, i) => (
+                          <div key={i} className="inline-block w-16 h-10 m-1 flex items-center justify-center bg-slate-700 rounded-md font-mono">{String(v)}</div>
+                        ))}
+                      </div>
+                    )}
+                    {concept === 'Algorithms' && algorithm === 'Kadane (Max Subarray)' && renderArray(cur.arr, cur.meta)}
+                  </div>
                 </div>
 
-                <div className="space-y-4 mb-4">
-                  {(concept === 'Sorting' || concept === 'Searching' || (concept === 'Data Structures' && ['Heapify', 'LinkedList Reverse'].includes(algorithm)) || (concept === 'Algorithms' && ['Kadane (Max Subarray)'].includes(algorithm))) && (
-                    <div>
-                      <label className="block mb-1 text-sm font-medium text-white/80">Input Array</label>
-                      <input type="text" value={inputArrayString} onChange={(e) => setInputArrayString(e.target.value)} className="w-full px-4 py-2 rounded-lg bg-neutral-700 text-white border border-white/6" placeholder="e.g. 5,3,8,1,2" />
-                    </div>
-                  )}
+                <div className="w-full bg-neutral-900/40 p-4 rounded-lg border border-white/6">
+                  <div className="flex items-center justify-center gap-4 mb-3">
+                    <button onClick={stepBack} className="p-2 rounded-md bg-neutral-800 border border-white/8"><SkipBack size={18} /></button>
+                    <button onClick={togglePlay} className="p-3 rounded-md bg-neutral-800 border border-white/8">{playing ? <Pause size={18} /> : <Play size={18} />}</button>
+                    <button onClick={stepForward} className="p-2 rounded-md bg-neutral-800 border border-white/8"><SkipForward size={18} /></button>
 
-                  {concept === 'Searching' && (
-                    <div>
-                      <label className="block mb-1 text-sm font-medium text-white/80">Target Value</label>
-                      <input type="text" value={target} onChange={(e) => setTarget(e.target.value)} className="w-full px-4 py-2 rounded-lg bg-neutral-700 text-white border border-white/6" placeholder="e.g. 3" />
+                    <div className="ml-6 flex items-center gap-2">
+                      <div className="text-sm text-white/70">Speed (ms)</div>
+                      <input type="number" value={speed} onChange={handleSpeedChange} className="w-28 px-2 py-1 rounded-md bg-neutral-800 text-white border border-white/6" />
                     </div>
-                  )}
+                  </div>
 
-                  {concept === 'Two Pointers / Sliding Window' && algorithm === 'Reverse Vowels' && (
-                    <div>
-                      <label className="block mb-1 text-sm font-medium text-white/80">Input String</label>
-                      <input type="text" value={inputStr} onChange={(e) => setInputStr(e.target.value)} className="w-full px-4 py-2 rounded-lg bg-neutral-700 text-white border border-white/6" placeholder="e.g. hello world" />
+                  <div>
+                    <input
+                      type="range"
+                      min={0}
+                      max={Math.max(0, (steps.length - 1))}
+                      value={index}
+                      onChange={handleIndexChange}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-xs text-white/60 mt-1">
+                      <div>0</div>
+                      <div>{steps.length > 0 ? steps.length - 1 : 0}</div>
                     </div>
-                  )}
 
-                  {concept === 'Two Pointers / Sliding Window' && algorithm === 'Max Window Sum (k)' && (
-                    <div>
-                      <label className="block mb-1 text-sm font-medium text-white/80">Window Size (k)</label>
-                      <input type="number" value={kWindow} onChange={(e) => setKWindow(Number(e.target.value))} className="w-full px-4 py-2 rounded-lg bg-neutral-700 text-white border border-white/6" placeholder="e.g. 3" />
+                    <div className="mt-2 text-center">
+                      <div className="font-semibold">{cur.description || 'No step'}</div>
+                      <div className="text-xs text-white/60 mt-1">{`Step ${index} of ${Math.max(0, steps.length - 1)}`}</div>
                     </div>
-                  )}
-
-                  {concept === 'Data Structures' && (
-                    <div>
-                      <label className="block mb-1 text-sm font-medium text-white/80">Operations (Stack/Queue)</label>
-                      <input type="text" value={inputOpsString} onChange={(e) => setInputOpsString(e.target.value)} className="w-full px-4 py-2 rounded-lg bg-neutral-700 text-white border border-white/6" placeholder="e.g. push:1,push:2,pop" />
-                      <p className="text-xs text-white/60 mt-1">Format: push:value, pop, enqueue:value, dequeue</p>
-                    </div>
-                  )}
-
-                  {concept === 'Graphs' && (
-                    <div>
-                      <label className="block mb-1 text-sm font-medium text-white/80">Adjacency List</label>
-                      <input type="text" value={inputAdjString} onChange={(e) => setInputAdjString(e.target.value)} className="w-full px-4 py-2 rounded-lg bg-neutral-700 text-white border border-white/6" placeholder="e.g. 0:1,2;1:0;2:0 or JSON" />
-                      <p className="text-xs text-white/60 mt-1">Format: node:neighbor1,neighbor2;... or JSON array</p>
-                    </div>
-                  )}
+                  </div>
                 </div>
 
-                <div className="mt-auto flex gap-3 justify-center">
-                  <button onClick={handleApply} className="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 font-semibold">Apply</button>
-                  <button onClick={resetAll} className="px-6 py-2 rounded-lg bg-neutral-700 hover:bg-neutral-600 font-semibold border border-white/6">Reset</button>
+                <div className="mt-4">
+                  <div className="bg-white/6 backdrop-blur-sm border border-white/10 p-4 rounded-xl shadow-lg">
+                    <h3 className="font-semibold text-lg mb-3 text-center">Legend</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-blue-400 rounded-md border border-white shadow-sm" />
+                        <span className="text-white/90 text-sm">Window / Left pointer</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-purple-400 rounded-md border border-white shadow-sm" />
+                        <span className="text-white/90 text-sm">Pivot / Mid</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-yellow-400 rounded-md border border-white shadow-sm" />
+                        <span className="text-white/90 text-sm">Shifting / Swapping</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-green-500 rounded-md border border-white shadow-sm" />
+                        <span className="text-white/90 text-sm">Best / Final</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-
-          {/* RIGHT column: Visualization + controls + legend (spans 7/12 on md+) */}
-          <div className="md:col-span-7 flex flex-col gap-4 h-full">
-            <div className="bg-neutral-800/50 rounded-2xl border border-white/6 p-6 shadow-inner flex flex-col h-full">
-              <h2 className="text-xl font-semibold mb-4">Visualization</h2>
-
-              <div className="flex-1 w-full flex items-center justify-center mb-4 overflow-auto">
-                {/* Let visualization stretch — full width */}
-                <div className="w-full">
-                  {concept === 'Sorting' && renderArray(cur.arr, cur.meta)}
-                  {concept === 'Searching' && renderArray(cur.arr, cur.meta)}
-                  {concept === 'Two Pointers / Sliding Window' && algorithm === 'Reverse Vowels' && (
-                    <div className="text-center text-2xl font-bold">
-                      {(cur.arr || []).map((ch, i) => {
-                        const classes = ['inline-block', 'px-3', 'py-1', 'm-0.5', 'rounded', 'transition-transform', 'duration-200'];
-                        if (cur.meta && (cur.meta.left === i || cur.meta.right === i)) classes.push('bg-blue-400 text-white scale-105');
-                        else if (cur.meta && cur.meta.swapped && cur.meta.swapped.includes(i)) classes.push('bg-yellow-400 text-black scale-105');
-                        else classes.push('bg-slate-700 text-white');
-                        return (<span key={i} className={classes.join(' ')}>{ch}</span>);
-                      })}
-                    </div>
-                  )}
-                  {concept === 'Two Pointers / Sliding Window' && algorithm === 'Max Window Sum (k)' && renderArray(cur.arr, cur.meta)}
-                  {concept === 'Data Structures' && renderArray(cur.arr, cur.meta)}
-                  {concept === 'Graphs' && renderGraph(cur.adj, cur.meta)}
-                  {concept === 'Trees' && renderTree(cur.tree, cur.meta)}
-                </div>
-              </div>
-
-              {/* Playback controls — centered and full width */}
-              <div className="w-full bg-neutral-900/40 p-4 rounded-lg border border-white/6">
-                <div className="flex items-center justify-center gap-4 mb-3">
-                  <button onClick={stepBack} className="p-2 rounded-md bg-neutral-800 border border-white/8"><SkipBack size={18} /></button>
-                  <button onClick={togglePlay} className="p-3 rounded-md bg-neutral-800 border border-white/8">{playing ? <Pause size={18} /> : <Play size={18} />}</button>
-                  <button onClick={stepForward} className="p-2 rounded-md bg-neutral-800 border border-white/8"><SkipForward size={18} /></button>
-
-                  <div className="ml-6 flex items-center gap-2">
-                    <div className="text-sm text-white/70">Speed (ms)</div>
-                    <input type="number" value={speed} onChange={handleSpeedChange} className="w-28 px-2 py-1 rounded-md bg-neutral-800 text-white border border-white/6" />
-                  </div>
-                </div>
-
-                <div>
-                  <input
-                    type="range"
-                    min={0}
-                    max={Math.max(0, (steps.length - 1))}
-                    value={index}
-                    onChange={handleIndexChange}
-                    className="w-full"
-                  />
-                  <div className="flex justify-between text-xs text-white/60 mt-1">
-                    <div>0</div>
-                    <div>{steps.length > 0 ? steps.length - 1 : 0}</div>
-                  </div>
-
-                  <div className="mt-2 text-center">
-                    <div className="font-semibold">{cur.description || 'No step'}</div>
-                    <div className="text-xs text-white/60 mt-1">{`Step ${index} of ${Math.max(0, steps.length - 1)}`}</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Legend at bottom of the right column (keeps compact but full-width) */}
-              <div className="mt-4">
-                <div className="bg-white/6 backdrop-blur-sm border border-white/10 p-4 rounded-xl shadow-lg">
-                  <h3 className="font-semibold text-lg mb-3 text-center">Legend</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-blue-400 rounded-md border border-white shadow-sm" />
-                      <span className="text-white/90 text-sm">Left pointer scanning</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-purple-400 rounded-md border border-white shadow-sm" />
-                      <span className="text-white/90 text-sm">Right pointer scanning</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-yellow-400 rounded-md border border-white shadow-sm" />
-                      <span className="text-white/90 text-sm">Swapping </span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-green-500 rounded-md border border-white shadow-sm" />
-                      <span className="text-white/90 text-sm">Final  position</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div> {/* end right card */}
-          </div> {/* end right col */}
-        </div> {/* end grid */}
-      </main>
+        </main>
+        <div>
+          <Footer />
+        </div>
+      </div>
     </div>
-  </div>
-);
+  );
 }
