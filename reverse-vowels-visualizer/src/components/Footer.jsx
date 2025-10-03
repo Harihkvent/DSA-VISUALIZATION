@@ -43,9 +43,9 @@ export default function Footer() {
     <footer className="mt-8 bg-neutral-900/70 border-t border-white/6 p-6">
       <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-6 items-start">
         <div className="flex-1 text-white/90">
-          <h3 className="text-xl font-semibold mb-1">Built by You</h3>
+          <h3 className="text-xl font-semibold mb-1">Built by Harihk</h3>
           <p className="text-sm text-white/70">If you'd like to collaborate, report a bug or request a feature, send me a message — I usually respond within 48 hours.</p>
-          <div className="mt-4 text-xs text-white/60">© {new Date().getFullYear()} Your Name — All rights reserved.</div>
+          <div className="mt-4 text-xs text-white/60">© {new Date().getFullYear()} Hari Kiran — All rights reserved.</div>
         </div>
 
         <div className="w-full md:w-[420px]">
@@ -54,7 +54,7 @@ export default function Footer() {
             <input
               type="text"
               aria-label="Name"
-              placeholder="Your name (optional)"
+              placeholder="Your name (required)"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="px-3 py-2 rounded-md bg-neutral-800 text-white border border-white/6"
