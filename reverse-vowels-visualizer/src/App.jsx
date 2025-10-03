@@ -518,11 +518,11 @@ return (
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 bg-yellow-400 rounded-md border border-white shadow-sm" />
-                      <span className="text-white/90 text-sm">Swapping vowels</span>
+                      <span className="text-white/90 text-sm">Swapping </span>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 bg-green-500 rounded-md border border-white shadow-sm" />
-                      <span className="text-white/90 text-sm">Final vowel position</span>
+                      <span className="text-white/90 text-sm">Final  position</span>
                     </div>
                   </div>
                 </div>
