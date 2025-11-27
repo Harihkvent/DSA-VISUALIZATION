@@ -402,8 +402,8 @@ export default function DSAVisualizer() {
         <header className={`flex-none py-8 px-8 backdrop-blur-sm border-b shadow-sm transition-colors duration-300 ${darkMode ? 'bg-gray-800/80 border-gray-700/60' : 'bg-white/90 border-blue-200'}`}>
           <div className="max-w-full flex items-center justify-between">
             <div>
-              <h1 className={`text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight bg-gradient-to-r ${darkMode ? 'from-cyan-400 to-blue-500' : 'from-blue-600 to-blue-800'} bg-clip-text text-transparent`}>DSA Visualizer</h1>
-              <p className={`text-lg md:text-xl mt-3 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Interactive steps and visual explanations for common algorithms & data structures.</p>
+              <h1 className={`text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight ${darkMode ? 'bg-gradient-to-r from-cyan-300 to-blue-400 bg-clip-text text-transparent' : 'text-blue-900'}`}>DSA Visualizer</h1>
+              <p className={`text-lg md:text-xl mt-3 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Interactive steps and visual explanations for common algorithms & data structures.</p>
             </div>
             <button
               onClick={() => setDarkMode(!darkMode)}
