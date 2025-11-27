@@ -430,10 +430,10 @@ export default function DSAVisualizer() {
                   </div>
 
                   <div className="space-y-4 mb-4">
-                    {(concept === 'Sorting' || concept === 'Searching' || (concept === 'Data Structures' && ['Heapify', 'LinkedList Reverse'].includes(algorithm)) || (concept === 'Algorithms' && ['Kadane (Max Subarray)'].includes(algorithm)) || (concept === 'Trees')) && (
+                    {(concept === 'Sorting' || concept === 'Searching' || (concept === 'Data Structures' && ['Heapify', 'LinkedList Reverse'].includes(algorithm)) || (concept === 'Algorithms' && ['Kadane (Max Subarray)'].includes(algorithm)) || (concept === 'Trees') || (concept === 'Two Pointers / Sliding Window' && algorithm === 'Max Window Sum (k)')) && (
                       <div>
                         <label className={`block mb-2 text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Input Array</label>
-                        <input type="text" value={inputArrayString} onChange={(e) => setInputArrayString(e.target.value)} className={`w-full px-4 py-2.5 rounded-lg border outline-none transition-all ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 placeholder-gray-500' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder-gray-500'}`} placeholder="e.g. 5,3,8,1,2" />
+                        <input type="text" value={inputArrayString} onChange={(e) => setInputArrayString(e.target.value)} className={`w-full px-4 py-2.5 rounded-lg border outline-none transition-all ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 placeholder-gray-500' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder-gray-500'}`} placeholder={concept === 'Searching' ? 'e.g. 2,3,4,10,40' : concept === 'Algorithms' ? 'e.g. -2,1,-3,4,-1,2,1' : concept === 'Trees' ? 'e.g. 1,2,3,4,5,6,7' : 'e.g. 5,3,8,1,2'} />
                       </div>
                     )}
 
@@ -458,19 +458,19 @@ export default function DSAVisualizer() {
                       </div>
                     )}
 
-                    {concept === 'Data Structures' && (
+                    {concept === 'Data Structures' && ['Stack', 'Queue'].includes(algorithm) && (
                       <div>
-                        <label className={`block mb-2 text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Operations (Stack/Queue)</label>
-                        <input type="text" value={inputOpsString} onChange={(e) => setInputOpsString(e.target.value)} className={`w-full px-4 py-2.5 rounded-lg border outline-none transition-all ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 placeholder-gray-500' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder-gray-500'}`} placeholder="e.g. push:1,push:2,pop" />
-                        <p className={`text-xs mt-1.5 ${darkMode ? 'text-gray-500' : 'text-gray-600'}`}>Format: push:value, pop, enqueue:value, dequeue</p>
+                        <label className={`block mb-2 text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Operations ({algorithm})</label>
+                        <input type="text" value={inputOpsString} onChange={(e) => setInputOpsString(e.target.value)} className={`w-full px-4 py-2.5 rounded-lg border outline-none transition-all ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 placeholder-gray-500' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder-gray-500'}`} placeholder={algorithm === 'Stack' ? 'e.g. push:1,push:2,push:3,pop' : 'e.g. enqueue:1,enqueue:2,dequeue'} />
+                        <p className={`text-xs mt-1.5 ${darkMode ? 'text-gray-500' : 'text-gray-600'}`}>Format: {algorithm === 'Stack' ? 'push:value, pop' : 'enqueue:value, dequeue'}</p>
                       </div>
                     )}
 
                     {concept === 'Graphs' && (
                       <div>
                         <label className={`block mb-2 text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Adjacency List</label>
-                        <input type="text" value={inputAdjString} onChange={(e) => setInputAdjString(e.target.value)} className={`w-full px-4 py-2.5 rounded-lg border outline-none transition-all ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 placeholder-gray-500' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder-gray-500'}`} placeholder="e.g. 0:1,2;1:0;2:0 or JSON" />
-                        <p className={`text-xs mt-1.5 ${darkMode ? 'text-gray-500' : 'text-gray-600'}`}>Format: node:neighbor1,neighbor2;... or JSON array</p>
+                        <input type="text" value={inputAdjString} onChange={(e) => setInputAdjString(e.target.value)} className={`w-full px-4 py-2.5 rounded-lg border outline-none transition-all ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 placeholder-gray-500' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder-gray-500'}`} placeholder="e.g. 0:1,2;1:0,3;2:0;3:1" />
+                        <p className={`text-xs mt-1.5 ${darkMode ? 'text-gray-500' : 'text-gray-600'}`}>Format: node:neighbor1,neighbor2;... or JSON: [[1,2],[0,3],[0],[1]]</p>
                       </div>
                     )}
 
@@ -505,9 +505,9 @@ export default function DSAVisualizer() {
                       <div className="text-center text-red-500 font-semibold">{cur.description}</div>
                     )}
 
-                    {concept === 'Sorting' && renderArray(cur.arr, cur.meta)}
-                    {concept === 'Searching' && renderArray(cur.arr, cur.meta)}
-                    {concept === 'Two Pointers / Sliding Window' && algorithm === 'Reverse Vowels' && (
+                    {steps.length > 0 && !cur.description?.startsWith('Error:') && concept === 'Sorting' && renderArray(cur.arr, cur.meta)}
+                    {steps.length > 0 && !cur.description?.startsWith('Error:') && concept === 'Searching' && renderArray(cur.arr, cur.meta)}
+                    {steps.length > 0 && !cur.description?.startsWith('Error:') && concept === 'Two Pointers / Sliding Window' && algorithm === 'Reverse Vowels' && (
                       <div className="text-center text-2xl font-bold">
                         {(cur.arr || []).map((ch, i) => {
                           const classes = ['inline-block', 'px-3', 'py-2', 'm-1', 'rounded-lg', 'transition-all', 'duration-300', 'border-2'];
@@ -522,19 +522,41 @@ export default function DSAVisualizer() {
                         })}
                       </div>
                     )}
-                    {concept === 'Two Pointers / Sliding Window' && algorithm === 'Max Window Sum (k)' && renderArray(cur.arr, cur.meta)}
-                    {concept === 'Data Structures' && algorithm !== 'LinkedList Reverse' && renderArray(cur.arr, cur.meta)}
-                    {concept === 'Data Structures' && algorithm === 'LinkedList Reverse' && renderNodes(cur.nodes, cur.meta)}
-                    {concept === 'Graphs' && renderGraph(cur.adj, cur.meta)}
-                    {concept === 'Trees' && renderTree(cur.tree, cur.meta)}
-                    {concept === 'Algorithms' && algorithm === 'Fibonacci DP' && (
+                    {steps.length > 0 && !cur.description?.startsWith('Error:') && concept === 'Two Pointers / Sliding Window' && algorithm === 'Max Window Sum (k)' && (
+                      <div>
+                        {renderArray(cur.arr, cur.meta)}
+                        {cur.meta && cur.meta.sum !== undefined && (
+                          <div className={`mt-4 text-center font-semibold text-lg ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                            Current Window Sum: <span className={darkMode ? 'text-cyan-400' : 'text-blue-600'}>{cur.meta.sum}</span>
+                            {cur.meta.max !== undefined && (
+                              <span> | Best Sum: <span className={darkMode ? 'text-green-400' : 'text-green-600'}>{cur.meta.max}</span></span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {steps.length > 0 && !cur.description?.startsWith('Error:') && concept === 'Data Structures' && algorithm !== 'LinkedList Reverse' && renderArray(cur.arr, cur.meta)}
+                    {steps.length > 0 && !cur.description?.startsWith('Error:') && concept === 'Data Structures' && algorithm === 'LinkedList Reverse' && renderNodes(cur.nodes, cur.meta)}
+                    {steps.length > 0 && !cur.description?.startsWith('Error:') && concept === 'Graphs' && renderGraph(cur.adj, cur.meta)}
+                    {steps.length > 0 && !cur.description?.startsWith('Error:') && concept === 'Trees' && renderTree(cur.tree, cur.meta)}
+                    {steps.length > 0 && !cur.description?.startsWith('Error:') && concept === 'Algorithms' && algorithm === 'Fibonacci DP' && (
                       <div className="text-center">
                         {(cur.table || []).map((v, i) => (
                           <div key={i} className={`inline-block w-16 h-12 m-1.5 flex items-center justify-center rounded-xl font-semibold shadow-sm border-2 ${darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-gray-100 border-gray-300 text-gray-800'}`}>{String(v)}</div>
                         ))}
                       </div>
                     )}
-                    {concept === 'Algorithms' && algorithm === 'Kadane (Max Subarray)' && renderArray(cur.arr, cur.meta)}
+                    {steps.length > 0 && !cur.description?.startsWith('Error:') && concept === 'Algorithms' && algorithm === 'Kadane (Max Subarray)' && (
+                      <div>
+                        {renderArray(cur.arr, cur.meta)}
+                        {cur.meta && (cur.meta.cur !== undefined || cur.meta.maxSoFar !== undefined) && (
+                          <div className={`mt-4 text-center font-semibold text-lg ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                            Current Sum: <span className={darkMode ? 'text-cyan-400' : 'text-blue-600'}>{cur.meta.cur ?? 0}</span> | 
+                            Max Sum: <span className={darkMode ? 'text-green-400' : 'text-green-600'}>{cur.meta.maxSoFar ?? 0}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
