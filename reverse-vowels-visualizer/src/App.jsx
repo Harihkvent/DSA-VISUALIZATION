@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Play, Pause, SkipForward, SkipBack } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Moon, Sun } from 'lucide-react';
 import Footer from './components/Footer'; // adjust path as needed
 
 /* ---------- parsers & generators (kept intact, safe guards kept) ---------- */
@@ -192,6 +192,7 @@ export default function DSAVisualizer() {
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(600);
+  const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
     setAlgorithm(prev => concepts[concept].includes(prev) ? prev : concepts[concept][0]);
@@ -277,18 +278,27 @@ export default function DSAVisualizer() {
       {(arr || []).map((v, i) => {
         const classes = [
           'w-14', 'h-14', 'flex', 'items-center', 'justify-center',
-          'rounded-lg', 'font-bold', 'text-white', 'text-lg',
-          'transition-transform', 'duration-200', 'shadow-md'
+          'rounded-xl', 'font-bold', 'text-lg',
+          'transition-all', 'duration-300', 'shadow-md', 'border-2'
         ];
-        // highlight window
-        if (meta && meta.window && i >= meta.window[0] && i <= meta.window[1]) classes.push('bg-blue-500 scale-105');
-        else if (meta && meta.best && i >= meta.best[0] && i <= meta.best[1]) classes.push('bg-green-500 scale-105');
-        else if (meta && meta.comparing && meta.comparing.includes(i)) classes.push('bg-indigo-500 scale-105');
-        else if (meta && meta.shifting && meta.shifting.includes(i)) classes.push('bg-yellow-500 scale-105');
-        else if (meta && meta.swapped && meta.swapped.includes(i)) classes.push('bg-yellow-400 scale-105 text-black');
-        else if (meta && meta.pivotIndex === i) classes.push('bg-purple-500 scale-105');
-        else if (meta && (meta.mid === i || (Array.isArray(meta.found) ? meta.found.includes(i) : meta.found === i))) classes.push('bg-amber-500 scale-105');
-        else classes.push('bg-slate-700');
+        // Safe color palette: blue, green, white, gray
+        if (meta && meta.window && i >= meta.window[0] && i <= meta.window[1]) {
+          classes.push(darkMode ? 'bg-cyan-900/40 border-cyan-400 text-cyan-300 scale-105' : 'bg-blue-500 border-blue-700 text-white scale-105 shadow-blue-200');
+        } else if (meta && meta.best && i >= meta.best[0] && i <= meta.best[1]) {
+          classes.push(darkMode ? 'bg-emerald-900/40 border-emerald-400 text-emerald-300 scale-105' : 'bg-green-500 border-green-700 text-white scale-105 shadow-green-200');
+        } else if (meta && meta.comparing && meta.comparing.includes(i)) {
+          classes.push(darkMode ? 'bg-purple-900/40 border-purple-400 text-purple-300 scale-105' : 'bg-blue-400 border-blue-600 text-white scale-105 shadow-blue-200');
+        } else if (meta && meta.shifting && meta.shifting.includes(i)) {
+          classes.push(darkMode ? 'bg-yellow-900/40 border-yellow-400 text-yellow-300 scale-105' : 'bg-gray-400 border-gray-600 text-white scale-105 shadow-gray-200');
+        } else if (meta && meta.swapped && meta.swapped.includes(i)) {
+          classes.push(darkMode ? 'bg-amber-900/40 border-amber-400 text-amber-300 scale-105' : 'bg-blue-300 border-blue-500 text-white scale-105 shadow-blue-200');
+        } else if (meta && meta.pivotIndex === i) {
+          classes.push(darkMode ? 'bg-pink-900/40 border-pink-400 text-pink-300 scale-105' : 'bg-gray-500 border-gray-700 text-white scale-105 shadow-gray-200');
+        } else if (meta && (meta.mid === i || (Array.isArray(meta.found) ? meta.found.includes(i) : meta.found === i))) {
+          classes.push(darkMode ? 'bg-teal-900/40 border-teal-400 text-teal-300 scale-105' : 'bg-green-400 border-green-600 text-white scale-105 shadow-green-200');
+        } else {
+          classes.push(darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-gray-100 border-gray-300 text-gray-800');
+        }
         return (<div key={i} className={classes.join(' ')}>{String(v)}</div>);
       })}
     </div>
@@ -316,11 +326,11 @@ export default function DSAVisualizer() {
       <div className="flex gap-6 items-center justify-center flex-wrap">
         {order.map((n, idx) => (
           <div key={n.id} className="flex items-center gap-2">
-            <div className={`px-3 py-2 rounded-md border font-medium transition-shadow ${meta.reversing === n.id ? 'bg-yellow-400 shadow-lg text-black' : 'bg-slate-700 text-white shadow'}`}>{n.val}</div>
-            <div className="text-white/60">→</div>
+            <div className={`px-4 py-3 rounded-xl border-2 font-semibold transition-all ${meta.reversing === n.id ? (darkMode ? 'bg-amber-900/40 border-amber-400 text-amber-300 shadow-lg' : 'bg-blue-400 border-blue-600 text-white shadow-lg shadow-blue-200') : (darkMode ? 'bg-gray-700 border-gray-600 text-gray-200 shadow-md' : 'bg-gray-100 border-gray-300 text-gray-800 shadow-md')}`}>{n.val}</div>
+            <div className={`text-xl ${darkMode ? 'text-gray-500' : 'text-blue-400'}`}>→</div>
           </div>
         ))}
-        <div className="text-white/80">null</div>
+        <div className={`font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>null</div>
       </div>
     );
   };
@@ -329,19 +339,19 @@ export default function DSAVisualizer() {
     <div className="flex flex-col items-center gap-6">
       <div className="flex gap-3 flex-wrap justify-center">
         {(tree || []).map((n) => (
-          <div key={n.id} className={`px-4 py-2 rounded-md transition-transform ${meta.visiting === n.id ? 'bg-yellow-400 scale-105 shadow-lg text-black' : 'bg-slate-700 text-white shadow'}`}>{n.val}</div>
+          <div key={n.id} className={`px-5 py-3 rounded-xl border-2 transition-all font-semibold ${meta.visiting === n.id ? (darkMode ? 'bg-purple-900/40 border-purple-400 text-purple-300 scale-105 shadow-lg' : 'bg-blue-400 border-blue-600 text-white scale-105 shadow-lg shadow-blue-200') : (darkMode ? 'bg-gray-700 border-gray-600 text-gray-200 shadow-md' : 'bg-gray-100 border-gray-300 text-gray-800 shadow-md')}`}>{n.val}</div>
         ))}
       </div>
-      <div className="text-sm text-white/80">(Nodes shown left-to-right by id — traversal highlights visiting nodes)</div>
+      <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>(Nodes shown left-to-right by id — traversal highlights visiting nodes)</div>
     </div>
   );
 
   const renderGraph = (adj = [], meta = {}) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
       {(adj || []).map((neis, i) => (
-        <div key={i} className={`p-3 rounded-md transition-shadow ${meta.visiting === i ? 'bg-yellow-400 shadow-lg text-black' : 'bg-slate-700 text-white shadow'}`}>
-          <div className="font-bold">{i}</div>
-          <div className="text-sm text-white/80">→ {Array.isArray(neis) ? neis.join(', ') : ''}</div>
+        <div key={i} className={`p-4 rounded-xl border-2 transition-all ${meta.visiting === i ? (darkMode ? 'bg-teal-900/40 border-teal-400 text-teal-300 shadow-lg' : 'bg-green-400 border-green-600 text-white shadow-lg shadow-green-200') : (darkMode ? 'bg-gray-700 border-gray-600 text-gray-200 shadow-md' : 'bg-gray-100 border-gray-300 text-gray-800 shadow-md')}`}>
+          <div className="font-bold text-lg">{i}</div>
+          <div className={`text-sm mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>→ {Array.isArray(neis) ? neis.join(', ') : ''}</div>
         </div>
       ))}
     </div>
@@ -387,25 +397,34 @@ export default function DSAVisualizer() {
 
   /* ---------- JSX ---------- */
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white">
+    <div className={`min-h-screen w-full transition-colors duration-300 ${darkMode ? 'bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800' : 'bg-gradient-to-br from-slate-50 via-blue-50 to-gray-50'}`}>
       <div className="flex flex-col min-h-screen">
-        <header className="flex-none py-6 px-8 border-b border-white/8">
-          <div className="max-w-full">
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">DSA Visualizer</h1>
-            <p className="text-sm text-white/70 mt-2">Interactive steps and visual explanations for common algorithms & data structures.</p>
+        <header className={`flex-none py-8 px-8 backdrop-blur-sm border-b shadow-sm transition-colors duration-300 ${darkMode ? 'bg-gray-800/80 border-gray-700/60' : 'bg-white/90 border-blue-200'}`}>
+          <div className="max-w-full flex items-center justify-between">
+            <div>
+              <h1 className={`text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight bg-gradient-to-r ${darkMode ? 'from-cyan-400 to-blue-500' : 'from-blue-600 to-blue-800'} bg-clip-text text-transparent`}>DSA Visualizer</h1>
+              <p className={`text-lg md:text-xl mt-3 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Interactive steps and visual explanations for common algorithms & data structures.</p>
+            </div>
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className={`p-3 rounded-xl transition-all duration-300 ${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-blue-400' : 'bg-blue-50 hover:bg-blue-100 text-blue-700'} shadow-md hover:shadow-lg`}
+              aria-label="Toggle dark mode"
+            >
+              {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
           </div>
         </header>
 
         <main className="flex-1 overflow-auto p-6">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-full">
             <div className="md:col-span-5 flex flex-col h-full">
-              <div className="flex-1 bg-neutral-800/60 rounded-2xl border border-white/6 p-6 shadow-inner h-full">
+              <div className={`flex-1 rounded-2xl border p-6 shadow-lg h-full transition-colors duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-blue-200 shadow-blue-50'}`}>
                 <div className="flex flex-col h-full">
                   <div className="flex gap-3 mb-4">
-                    <select value={concept} onChange={(e) => setConcept(e.target.value)} className="flex-1 px-4 py-2 rounded-lg bg-neutral-700 text-white border border-white/6">
+                    <select value={concept} onChange={(e) => setConcept(e.target.value)} className={`flex-1 px-4 py-2.5 rounded-lg border outline-none transition-all font-medium ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'}`}>
                       {Object.keys(concepts).map((c) => (<option key={c} value={c}>{c}</option>))}
                     </select>
-                    <select value={algorithm} onChange={(e) => setAlgorithm(e.target.value)} className="w-44 px-4 py-2 rounded-lg bg-neutral-700 text-white border border-white/6">
+                    <select value={algorithm} onChange={(e) => setAlgorithm(e.target.value)} className={`w-44 px-4 py-2.5 rounded-lg border outline-none transition-all font-medium ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'}`}>
                       {concepts[concept].map((alg) => (<option key={alg} value={alg}>{alg}</option>))}
                     </select>
                   </div>
@@ -413,77 +432,77 @@ export default function DSAVisualizer() {
                   <div className="space-y-4 mb-4">
                     {(concept === 'Sorting' || concept === 'Searching' || (concept === 'Data Structures' && ['Heapify', 'LinkedList Reverse'].includes(algorithm)) || (concept === 'Algorithms' && ['Kadane (Max Subarray)'].includes(algorithm)) || (concept === 'Trees')) && (
                       <div>
-                        <label className="block mb-1 text-sm font-medium text-white/80">Input Array</label>
-                        <input type="text" value={inputArrayString} onChange={(e) => setInputArrayString(e.target.value)} className="w-full px-4 py-2 rounded-lg bg-neutral-700 text-white border border-white/6" placeholder="e.g. 5,3,8,1,2" />
+                        <label className={`block mb-2 text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Input Array</label>
+                        <input type="text" value={inputArrayString} onChange={(e) => setInputArrayString(e.target.value)} className={`w-full px-4 py-2.5 rounded-lg border outline-none transition-all ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 placeholder-gray-500' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder-gray-500'}`} placeholder="e.g. 5,3,8,1,2" />
                       </div>
                     )}
 
                     {concept === 'Searching' && (
                       <div>
-                        <label className="block mb-1 text-sm font-medium text-white/80">Target Value</label>
-                        <input type="text" value={target} onChange={(e) => setTarget(e.target.value)} className="w-full px-4 py-2 rounded-lg bg-neutral-700 text-white border border-white/6" placeholder="e.g. 3" />
+                        <label className={`block mb-2 text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Target Value</label>
+                        <input type="text" value={target} onChange={(e) => setTarget(e.target.value)} className={`w-full px-4 py-2.5 rounded-lg border outline-none transition-all ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 placeholder-gray-500' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder-gray-500'}`} placeholder="e.g. 3" />
                       </div>
                     )}
 
                     {concept === 'Two Pointers / Sliding Window' && algorithm === 'Reverse Vowels' && (
                       <div>
-                        <label className="block mb-1 text-sm font-medium text-white/80">Input String</label>
-                        <input type="text" value={inputStr} onChange={(e) => setInputStr(e.target.value)} className="w-full px-4 py-2 rounded-lg bg-neutral-700 text-white border border-white/6" placeholder="e.g. hello world" />
+                        <label className={`block mb-2 text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Input String</label>
+                        <input type="text" value={inputStr} onChange={(e) => setInputStr(e.target.value)} className={`w-full px-4 py-2.5 rounded-lg border outline-none transition-all ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 placeholder-gray-500' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder-gray-500'}`} placeholder="e.g. hello world" />
                       </div>
                     )}
 
                     {concept === 'Two Pointers / Sliding Window' && algorithm === 'Max Window Sum (k)' && (
                       <div>
-                        <label className="block mb-1 text-sm font-medium text-white/80">Window Size (k)</label>
-                        <input type="number" value={kWindow} onChange={(e) => setKWindow(Number(e.target.value))} className="w-full px-4 py-2 rounded-lg bg-neutral-700 text-white border border-white/6" placeholder="e.g. 3" />
+                        <label className={`block mb-2 text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Window Size (k)</label>
+                        <input type="number" value={kWindow} onChange={(e) => setKWindow(Number(e.target.value))} className={`w-full px-4 py-2.5 rounded-lg border outline-none transition-all ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 placeholder-gray-500' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder-gray-500'}`} placeholder="e.g. 3" />
                       </div>
                     )}
 
                     {concept === 'Data Structures' && (
                       <div>
-                        <label className="block mb-1 text-sm font-medium text-white/80">Operations (Stack/Queue)</label>
-                        <input type="text" value={inputOpsString} onChange={(e) => setInputOpsString(e.target.value)} className="w-full px-4 py-2 rounded-lg bg-neutral-700 text-white border border-white/6" placeholder="e.g. push:1,push:2,pop" />
-                        <p className="text-xs text-white/60 mt-1">Format: push:value, pop, enqueue:value, dequeue</p>
+                        <label className={`block mb-2 text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Operations (Stack/Queue)</label>
+                        <input type="text" value={inputOpsString} onChange={(e) => setInputOpsString(e.target.value)} className={`w-full px-4 py-2.5 rounded-lg border outline-none transition-all ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 placeholder-gray-500' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder-gray-500'}`} placeholder="e.g. push:1,push:2,pop" />
+                        <p className={`text-xs mt-1.5 ${darkMode ? 'text-gray-500' : 'text-gray-600'}`}>Format: push:value, pop, enqueue:value, dequeue</p>
                       </div>
                     )}
 
                     {concept === 'Graphs' && (
                       <div>
-                        <label className="block mb-1 text-sm font-medium text-white/80">Adjacency List</label>
-                        <input type="text" value={inputAdjString} onChange={(e) => setInputAdjString(e.target.value)} className="w-full px-4 py-2 rounded-lg bg-neutral-700 text-white border border-white/6" placeholder="e.g. 0:1,2;1:0;2:0 or JSON" />
-                        <p className="text-xs text-white/60 mt-1">Format: node:neighbor1,neighbor2;... or JSON array</p>
+                        <label className={`block mb-2 text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Adjacency List</label>
+                        <input type="text" value={inputAdjString} onChange={(e) => setInputAdjString(e.target.value)} className={`w-full px-4 py-2.5 rounded-lg border outline-none transition-all ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 placeholder-gray-500' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder-gray-500'}`} placeholder="e.g. 0:1,2;1:0;2:0 or JSON" />
+                        <p className={`text-xs mt-1.5 ${darkMode ? 'text-gray-500' : 'text-gray-600'}`}>Format: node:neighbor1,neighbor2;... or JSON array</p>
                       </div>
                     )}
 
                     {concept === 'Algorithms' && algorithm === 'Fibonacci DP' && (
                       <div>
-                        <label className="block mb-1 text-sm font-medium text-white/80">n for Fibonacci DP</label>
-                        <input type="number" value={fibN} onChange={(e) => setFibN(Number(e.target.value))} className="w-full px-4 py-2 rounded-lg bg-neutral-700 text-white border border-white/6" placeholder="e.g. 8" />
+                        <label className={`block mb-2 text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>n for Fibonacci DP</label>
+                        <input type="number" value={fibN} onChange={(e) => setFibN(Number(e.target.value))} className={`w-full px-4 py-2.5 rounded-lg border outline-none transition-all ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 placeholder-gray-500' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder-gray-500'}`} placeholder="e.g. 8" />
                       </div>
                     )}
                   </div>
 
                   <div className="mt-auto flex gap-3 justify-center">
-                    <button onClick={handleApply} className="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 font-semibold">Apply</button>
-                    <button onClick={resetAll} className="px-6 py-2 rounded-lg bg-neutral-700 hover:bg-neutral-600 font-semibold border border-white/6">Reset</button>
+                    <button onClick={handleApply} className={`px-6 py-2.5 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all ${darkMode ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white' : 'bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white'}`}>Apply</button>
+                    <button onClick={resetAll} className={`px-6 py-2.5 rounded-lg font-semibold border-2 transition-all ${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-200 border-gray-600' : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-300 hover:border-gray-400'}`}>Reset</button>
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="md:col-span-7 flex flex-col gap-4 h-full">
-              <div className="bg-neutral-800/50 rounded-2xl border border-white/6 p-6 shadow-inner flex flex-col h-full">
-                <h2 className="text-xl font-semibold mb-4">Visualization</h2>
+              <div className={`rounded-2xl border p-6 shadow-lg flex flex-col h-full transition-colors duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-blue-200 shadow-blue-50'}`}>
+                <h2 className={`text-xl font-bold mb-4 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Visualization</h2>
 
                 <div className="flex-1 w-full flex items-center justify-center mb-4 overflow-auto">
                   <div className="w-full">
                     {/* show readable error or no-step message if steps empty */}
                     {steps.length === 0 && (
-                      <div className="text-center text-white/60">No visualization. Enter inputs and click <strong>Apply</strong>.</div>
+                      <div className={`text-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>No visualization. Enter inputs and click <strong className={darkMode ? 'text-cyan-400' : 'text-blue-600'}>Apply</strong>.</div>
                     )}
 
                     {cur && cur.description && cur.description.startsWith('Error:') && (
-                      <div className="text-center text-red-400 font-semibold">{cur.description}</div>
+                      <div className="text-center text-red-500 font-semibold">{cur.description}</div>
                     )}
 
                     {concept === 'Sorting' && renderArray(cur.arr, cur.meta)}
@@ -491,10 +510,14 @@ export default function DSAVisualizer() {
                     {concept === 'Two Pointers / Sliding Window' && algorithm === 'Reverse Vowels' && (
                       <div className="text-center text-2xl font-bold">
                         {(cur.arr || []).map((ch, i) => {
-                          const classes = ['inline-block', 'px-3', 'py-1', 'm-0.5', 'rounded', 'transition-transform', 'duration-200'];
-                          if (cur.meta && (cur.meta.left === i || cur.meta.right === i)) classes.push('bg-blue-400 text-white scale-105');
-                          else if (cur.meta && cur.meta.swapped && cur.meta.swapped.includes(i)) classes.push('bg-yellow-400 text-black scale-105');
-                          else classes.push('bg-slate-700 text-white');
+                          const classes = ['inline-block', 'px-3', 'py-2', 'm-1', 'rounded-lg', 'transition-all', 'duration-300', 'border-2'];
+                          if (cur.meta && (cur.meta.left === i || cur.meta.right === i)) {
+                            classes.push(darkMode ? 'bg-cyan-900/40 border-cyan-400 text-cyan-300 scale-105 shadow-md' : 'bg-blue-500 border-blue-700 text-white scale-105 shadow-md shadow-blue-200');
+                          } else if (cur.meta && cur.meta.swapped && cur.meta.swapped.includes(i)) {
+                            classes.push(darkMode ? 'bg-amber-900/40 border-amber-400 text-amber-300 scale-105 shadow-md' : 'bg-blue-300 border-blue-500 text-white scale-105 shadow-md shadow-blue-200');
+                          } else {
+                            classes.push(darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-gray-100 border-gray-300 text-gray-800');
+                          }
                           return (<span key={i} className={classes.join(' ')}>{ch}</span>);
                         })}
                       </div>
@@ -507,7 +530,7 @@ export default function DSAVisualizer() {
                     {concept === 'Algorithms' && algorithm === 'Fibonacci DP' && (
                       <div className="text-center">
                         {(cur.table || []).map((v, i) => (
-                          <div key={i} className="inline-block w-16 h-10 m-1 flex items-center justify-center bg-slate-700 rounded-md font-mono">{String(v)}</div>
+                          <div key={i} className={`inline-block w-16 h-12 m-1.5 flex items-center justify-center rounded-xl font-semibold shadow-sm border-2 ${darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-gray-100 border-gray-300 text-gray-800'}`}>{String(v)}</div>
                         ))}
                       </div>
                     )}
@@ -515,15 +538,15 @@ export default function DSAVisualizer() {
                   </div>
                 </div>
 
-                <div className="w-full bg-neutral-900/40 p-4 rounded-lg border border-white/6">
-                  <div className="flex items-center justify-center gap-4 mb-3">
-                    <button onClick={stepBack} className="p-2 rounded-md bg-neutral-800 border border-white/8"><SkipBack size={18} /></button>
-                    <button onClick={togglePlay} className="p-3 rounded-md bg-neutral-800 border border-white/8">{playing ? <Pause size={18} /> : <Play size={18} />}</button>
-                    <button onClick={stepForward} className="p-2 rounded-md bg-neutral-800 border border-white/8"><SkipForward size={18} /></button>
+                <div className={`w-full p-5 rounded-xl border shadow-md transition-colors duration-300 ${darkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-blue-50 border-blue-200'}`}>
+                  <div className="flex items-center justify-center gap-4 mb-4">
+                    <button onClick={stepBack} className={`p-2.5 rounded-lg border-2 transition-all shadow-sm ${darkMode ? 'bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600 hover:border-cyan-400' : 'bg-white border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-500'}`}><SkipBack size={20} /></button>
+                    <button onClick={togglePlay} className={`p-3 rounded-lg border-2 text-white transition-all shadow-md ${darkMode ? 'bg-gradient-to-r from-cyan-500 to-blue-600 border-cyan-600 hover:from-cyan-600 hover:to-blue-700' : 'bg-gradient-to-r from-blue-500 to-blue-700 border-blue-600 hover:from-blue-600 hover:to-blue-800'}`}>{playing ? <Pause size={20} /> : <Play size={20} />}</button>
+                    <button onClick={stepForward} className={`p-2.5 rounded-lg border-2 transition-all shadow-sm ${darkMode ? 'bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600 hover:border-cyan-400' : 'bg-white border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-500'}`}><SkipForward size={20} /></button>
 
                     <div className="ml-6 flex items-center gap-2">
-                      <div className="text-sm text-white/70">Speed (ms)</div>
-                      <input type="number" value={speed} onChange={handleSpeedChange} className="w-28 px-2 py-1 rounded-md bg-neutral-800 text-white border border-white/6" />
+                      <div className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Speed (ms)</div>
+                      <input type="number" value={speed} onChange={handleSpeedChange} className={`w-24 px-3 py-1.5 rounded-lg border-2 outline-none transition-all ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20' : 'bg-white text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'}`} />
                     </div>
                   </div>
 
@@ -534,39 +557,39 @@ export default function DSAVisualizer() {
                       max={Math.max(0, (steps.length - 1))}
                       value={index}
                       onChange={handleIndexChange}
-                      className="w-full"
+                      className={`w-full h-2 rounded-lg appearance-none cursor-pointer ${darkMode ? 'bg-gray-600 accent-cyan-500' : 'bg-blue-200 accent-blue-500'}`}
                     />
-                    <div className="flex justify-between text-xs text-white/60 mt-1">
+                    <div className={`flex justify-between text-xs mt-1.5 font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                       <div>0</div>
                       <div>{steps.length > 0 ? steps.length - 1 : 0}</div>
                     </div>
 
-                    <div className="mt-2 text-center">
-                      <div className="font-semibold">{cur.description || 'No step'}</div>
-                      <div className="text-xs text-white/60 mt-1">{`Step ${index} of ${Math.max(0, steps.length - 1)}`}</div>
+                    <div className="mt-3 text-center">
+                      <div className={`font-semibold text-base ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>{cur.description || 'No step'}</div>
+                      <div className={`text-xs mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{`Step ${index} of ${Math.max(0, steps.length - 1)}`}</div>
                     </div>
                   </div>
                 </div>
 
                 <div className="mt-4">
-                  <div className="bg-white/6 backdrop-blur-sm border border-white/10 p-4 rounded-xl shadow-lg">
-                    <h3 className="font-semibold text-lg mb-3 text-center">Legend</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className={`border-2 p-5 rounded-xl shadow-md transition-colors duration-300 ${darkMode ? 'bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700' : 'bg-gradient-to-br from-blue-50 to-gray-50 border-blue-200'}`}>
+                    <h3 className={`font-bold text-lg mb-4 text-center ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Legend</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-blue-400 rounded-md border border-white shadow-sm" />
-                        <span className="text-white/90 text-sm">Window / Left pointer</span>
+                        <div className="w-10 h-10 bg-blue-400 border-2 border-blue-600 rounded-lg shadow-sm" />
+                        <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Window / Pointer</span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-purple-400 rounded-md border border-white shadow-sm" />
-                        <span className="text-white/90 text-sm">Pivot / Mid</span>
+                        <div className="w-10 h-10 bg-pink-400 border-2 border-pink-600 rounded-lg shadow-sm" />
+                        <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Pivot</span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-yellow-400 rounded-md border border-white shadow-sm" />
-                        <span className="text-white/90 text-sm">Shifting / Swapping</span>
+                        <div className="w-10 h-10 bg-orange-400 border-2 border-orange-600 rounded-lg shadow-sm" />
+                        <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Swapping</span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-green-500 rounded-md border border-white shadow-sm" />
-                        <span className="text-white/90 text-sm">Best / Final</span>
+                        <div className="w-10 h-10 bg-green-400 border-2 border-green-600 rounded-lg shadow-sm" />
+                        <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Best / Result</span>
                       </div>
                     </div>
                   </div>
@@ -576,7 +599,7 @@ export default function DSAVisualizer() {
           </div>
         </main>
         <div>
-          <Footer />
+          <Footer darkMode={darkMode} />
         </div>
       </div>
     </div>
