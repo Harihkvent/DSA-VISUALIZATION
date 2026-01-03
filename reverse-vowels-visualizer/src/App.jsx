@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { Play, Pause, SkipForward, SkipBack, Moon, Sun, Info, Zap, BookOpen } from 'lucide-react';
 import Footer from './components/Footer'; // adjust path as needed
 
@@ -34,7 +34,9 @@ function parseAdjList(str) {
       const parsed = JSON.parse(str);
       if (Array.isArray(parsed)) return parsed.map(row => Array.isArray(row) ? row : []);
     }
-  } catch (e) {}
+  } catch {
+    // JSON parsing failed, try string format
+  }
   const parts = str.split(';').map(p => p.trim()).filter(Boolean);
   if (parts.length === 0) return null;
   const adj = [];
@@ -352,6 +354,11 @@ export default function DSAVisualizer() {
       setInputStr(info.example);
     }
     
+    // For Stack and Queue operations
+    if (algorithm === 'Stack' || algorithm === 'Queue') {
+      setInputOpsString(info.example);
+    }
+    
     // For graph algorithms
     if (concept === 'Graphs') {
       setInputAdjString(info.example);
@@ -456,7 +463,7 @@ export default function DSAVisualizer() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [steps, playing, index]);
+  }, [steps.length, playing, togglePlay, stepForward, stepBack]);
 
   const cur = steps[index] || {};
 
@@ -513,7 +520,7 @@ export default function DSAVisualizer() {
 
     return (
       <div className="flex gap-6 items-center justify-center flex-wrap">
-        {order.map((n, idx) => (
+        {order.map((n) => (
           <div key={n.id} className="flex items-center gap-2">
             <div className={`px-4 py-3 rounded-xl border-2 font-semibold transition-all ${meta.reversing === n.id ? (darkMode ? 'bg-amber-900/40 border-amber-400 text-amber-300 shadow-lg' : 'bg-blue-400 border-blue-600 text-white shadow-lg shadow-blue-200') : (darkMode ? 'bg-gray-700 border-gray-600 text-gray-200 shadow-md' : 'bg-gray-100 border-gray-300 text-gray-800 shadow-md')}`}>{n.val}</div>
             <div className={`text-xl ${darkMode ? 'text-gray-500' : 'text-blue-400'}`}>→</div>
@@ -548,20 +555,20 @@ export default function DSAVisualizer() {
 
   /* ---------- control handlers ---------- */
 
-  function togglePlay() {
+  const togglePlay = useCallback(() => {
     if (steps.length === 0) return;
     setPlaying(p => !p);
-  }
+  }, [steps.length]);
 
-  function stepForward() {
+  const stepForward = useCallback(() => {
     setIndex(i => Math.min(i + 1, Math.max(0, steps.length - 1)));
     setPlaying(false);
-  }
+  }, [steps.length]);
 
-  function stepBack() {
+  const stepBack = useCallback(() => {
     setIndex(i => Math.max(0, i - 1));
     setPlaying(false);
-  }
+  }, []);
 
   function handleIndexChange(e) {
     const v = Number(e.target.value);
