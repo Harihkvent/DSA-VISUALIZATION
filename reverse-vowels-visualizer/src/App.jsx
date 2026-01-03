@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Play, Pause, SkipForward, SkipBack, Moon, Sun } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Moon, Sun, Info, Zap, BookOpen } from 'lucide-react';
 import Footer from './components/Footer'; // adjust path as needed
 
 /* ---------- parsers & generators (kept intact, safe guards kept) ---------- */
@@ -52,6 +52,140 @@ function parseAdjList(str) {
   for (let i = 0; i <= maxIndex; i++) out[i] = Array.isArray(adj[i]) ? adj[i] : [];
   return out.length ? out : null;
 }
+
+/* ---------- Algorithm Metadata ---------- */
+
+const algorithmInfo = {
+  'Bubble': {
+    description: 'Repeatedly steps through the list, compares adjacent elements and swaps them if they are in the wrong order.',
+    timeComplexity: 'O(n²)',
+    spaceComplexity: 'O(1)',
+    example: '5,3,8,1,2',
+    bestFor: 'Learning sorting basics, small datasets'
+  },
+  'Selection': {
+    description: 'Divides input into sorted and unsorted regions, repeatedly selects the smallest element from unsorted region.',
+    timeComplexity: 'O(n²)',
+    spaceComplexity: 'O(1)',
+    example: '64,25,12,22,11',
+    bestFor: 'Small datasets, minimal memory writes'
+  },
+  'Insertion': {
+    description: 'Builds final sorted array one item at a time, inserting each element into its proper position.',
+    timeComplexity: 'O(n²)',
+    spaceComplexity: 'O(1)',
+    example: '12,11,13,5,6',
+    bestFor: 'Nearly sorted data, online algorithms'
+  },
+  'Merge': {
+    description: 'Divides array into halves, recursively sorts them, then merges the sorted halves.',
+    timeComplexity: 'O(n log n)',
+    spaceComplexity: 'O(n)',
+    example: '38,27,43,3,9,82,10',
+    bestFor: 'Large datasets, stable sorting, linked lists'
+  },
+  'Quick': {
+    description: 'Picks a pivot element, partitions array around pivot, then recursively sorts partitions.',
+    timeComplexity: 'O(n log n) avg, O(n²) worst',
+    spaceComplexity: 'O(log n)',
+    example: '10,7,8,9,1,5',
+    bestFor: 'General purpose, in-place sorting'
+  },
+  'Linear': {
+    description: 'Sequentially checks each element until target is found or list ends.',
+    timeComplexity: 'O(n)',
+    spaceComplexity: 'O(1)',
+    example: '2,3,4,10,40',
+    target: '10',
+    bestFor: 'Unsorted data, small datasets'
+  },
+  'Binary': {
+    description: 'Repeatedly divides sorted array in half, eliminating half of remaining elements each step.',
+    timeComplexity: 'O(log n)',
+    spaceComplexity: 'O(1)',
+    example: '2,3,4,10,40',
+    target: '10',
+    bestFor: 'Sorted arrays, large datasets'
+  },
+  'Reverse Vowels': {
+    description: 'Uses two pointers from both ends to swap vowels in a string.',
+    timeComplexity: 'O(n)',
+    spaceComplexity: 'O(n)',
+    example: 'hello world',
+    bestFor: 'String manipulation, two-pointer technique'
+  },
+  'Max Window Sum (k)': {
+    description: 'Slides a fixed-size window through array to find subarray with maximum sum.',
+    timeComplexity: 'O(n)',
+    spaceComplexity: 'O(1)',
+    example: '1,4,2,10,2,3,1,0,20',
+    k: '3',
+    bestFor: 'Subarray problems, optimization'
+  },
+  'Stack': {
+    description: 'Last-In-First-Out (LIFO) data structure. Elements are added and removed from the same end.',
+    timeComplexity: 'O(1) per operation',
+    spaceComplexity: 'O(n)',
+    example: 'push:1,push:2,push:3,pop,push:4',
+    bestFor: 'Function calls, undo operations, expression evaluation'
+  },
+  'Queue': {
+    description: 'First-In-First-Out (FIFO) data structure. Elements are added at rear and removed from front.',
+    timeComplexity: 'O(1) per operation',
+    spaceComplexity: 'O(n)',
+    example: 'enqueue:1,enqueue:2,dequeue,enqueue:3',
+    bestFor: 'Task scheduling, BFS, buffers'
+  },
+  'LinkedList Reverse': {
+    description: 'Reverses the direction of pointers in a singly linked list.',
+    timeComplexity: 'O(n)',
+    spaceComplexity: 'O(1)',
+    example: '1,2,3,4,5',
+    bestFor: 'Pointer manipulation, in-place reversal'
+  },
+  'Heapify': {
+    description: 'Converts an array into a max-heap data structure where parent nodes are greater than children.',
+    timeComplexity: 'O(n)',
+    spaceComplexity: 'O(1)',
+    example: '4,10,3,5,1',
+    bestFor: 'Priority queues, heap sort, top-k problems'
+  },
+  'BFS': {
+    description: 'Explores graph level by level, visiting all neighbors before moving to next level.',
+    timeComplexity: 'O(V + E)',
+    spaceComplexity: 'O(V)',
+    example: '0:1,2;1:0,3;2:0;3:1',
+    bestFor: 'Shortest path, level-order traversal'
+  },
+  'DFS': {
+    description: 'Explores graph by going as deep as possible along each branch before backtracking.',
+    timeComplexity: 'O(V + E)',
+    spaceComplexity: 'O(V)',
+    example: '0:1,2;1:0,3;2:0;3:1',
+    bestFor: 'Pathfinding, cycle detection, topological sort'
+  },
+  'Binary Tree Traversals': {
+    description: 'Different ways to visit all nodes: Preorder (Root-Left-Right), Inorder (Left-Root-Right), Postorder (Left-Right-Root), Level-order (BFS).',
+    timeComplexity: 'O(n)',
+    spaceComplexity: 'O(h) recursive, O(n) iterative',
+    example: '1,2,3,4,5,6,7',
+    bestFor: 'Tree processing, expression trees'
+  },
+  'Kadane (Max Subarray)': {
+    description: 'Finds maximum sum of contiguous subarray using dynamic programming.',
+    timeComplexity: 'O(n)',
+    spaceComplexity: 'O(1)',
+    example: '-2,1,-3,4,-1,2,1,-5,4',
+    bestFor: 'Maximum subarray problems, DP introduction'
+  },
+  'Fibonacci DP': {
+    description: 'Computes Fibonacci numbers using dynamic programming with memoization.',
+    timeComplexity: 'O(n)',
+    spaceComplexity: 'O(n)',
+    example: '8',
+    bestFor: 'Introduction to DP, optimization problems'
+  }
+};
 
 /* ---------- step generators ---------- */
 
@@ -204,6 +338,31 @@ export default function DSAVisualizer() {
     generateStepsFromInputs(parsed);
   }
 
+  function loadExample() {
+    const info = algorithmInfo[algorithm];
+    if (!info) return;
+    
+    // Load example inputs based on algorithm
+    if (info.example) setInputArrayString(info.example);
+    if (info.target) setTarget(info.target);
+    if (info.k) setKWindow(Number(info.k));
+    
+    // For string-based algorithms
+    if (algorithm === 'Reverse Vowels') {
+      setInputStr(info.example);
+    }
+    
+    // For graph algorithms
+    if (concept === 'Graphs') {
+      setInputAdjString(info.example);
+    }
+    
+    // For Fibonacci
+    if (algorithm === 'Fibonacci DP') {
+      setFibN(Number(info.example));
+    }
+  }
+
   function generateStepsFromInputs(arr = inputArray) {
     const ops = parseOps(inputOpsString);
     const adj = parseAdjList(inputAdjString);
@@ -268,6 +427,36 @@ export default function DSAVisualizer() {
     }
     return () => clearTimeout(t);
   }, [playing, index, steps, speed]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (steps.length === 0) return;
+      
+      switch(e.key) {
+        case ' ': // Space - Play/Pause
+          e.preventDefault();
+          togglePlay();
+          break;
+        case 'ArrowRight': // Right arrow - Next step
+          e.preventDefault();
+          stepForward();
+          break;
+        case 'ArrowLeft': // Left arrow - Previous step
+          e.preventDefault();
+          stepBack();
+          break;
+        case 'Escape': // Escape - Stop playing
+          if (playing) setPlaying(false);
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [steps, playing, index]);
 
   const cur = steps[index] || {};
 
@@ -429,6 +618,36 @@ export default function DSAVisualizer() {
                     </select>
                   </div>
 
+                  {/* Algorithm Info Section */}
+                  {algorithmInfo[algorithm] && (
+                    <div className={`mb-4 p-4 rounded-xl border-2 transition-all ${darkMode ? 'bg-gradient-to-br from-blue-900/20 to-cyan-900/20 border-blue-700/50' : 'bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-300'}`}>
+                      <div className="flex items-start gap-2 mb-2">
+                        <BookOpen size={18} className={darkMode ? 'text-cyan-400 mt-0.5' : 'text-blue-600 mt-0.5'} />
+                        <div className="flex-1">
+                          <h3 className={`font-bold text-sm mb-1 ${darkMode ? 'text-cyan-300' : 'text-blue-800'}`}>{algorithm}</h3>
+                          <p className={`text-xs leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{algorithmInfo[algorithm].description}</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 mt-3">
+                        <div className={`flex items-center gap-1.5 text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                          <Zap size={14} className={darkMode ? 'text-yellow-400' : 'text-yellow-600'} />
+                          <span className="font-medium">Time:</span>
+                          <code className={`px-1.5 py-0.5 rounded text-xs font-mono ${darkMode ? 'bg-gray-700 text-cyan-300' : 'bg-white text-blue-700'}`}>{algorithmInfo[algorithm].timeComplexity}</code>
+                        </div>
+                        <div className={`flex items-center gap-1.5 text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                          <Info size={14} className={darkMode ? 'text-green-400' : 'text-green-600'} />
+                          <span className="font-medium">Space:</span>
+                          <code className={`px-1.5 py-0.5 rounded text-xs font-mono ${darkMode ? 'bg-gray-700 text-cyan-300' : 'bg-white text-blue-700'}`}>{algorithmInfo[algorithm].spaceComplexity}</code>
+                        </div>
+                      </div>
+                      {algorithmInfo[algorithm].bestFor && (
+                        <div className={`mt-2 text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                          <span className="font-semibold">Best for:</span> {algorithmInfo[algorithm].bestFor}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <div className="space-y-4 mb-4">
                     {(concept === 'Sorting' || concept === 'Searching' || (concept === 'Data Structures' && ['Heapify', 'LinkedList Reverse'].includes(algorithm)) || (concept === 'Algorithms' && ['Kadane (Max Subarray)'].includes(algorithm)) || (concept === 'Trees') || (concept === 'Two Pointers / Sliding Window' && algorithm === 'Max Window Sum (k)')) && (
                       <div>
@@ -482,7 +701,11 @@ export default function DSAVisualizer() {
                     )}
                   </div>
 
-                  <div className="mt-auto flex gap-3 justify-center">
+                  <div className="mt-auto flex gap-3 justify-center flex-wrap">
+                    <button onClick={loadExample} className={`px-5 py-2.5 rounded-lg font-semibold border-2 transition-all flex items-center gap-2 ${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-cyan-300 border-cyan-700 hover:border-cyan-500' : 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-300 hover:border-blue-500'}`}>
+                      <Info size={18} />
+                      Load Example
+                    </button>
                     <button onClick={handleApply} className={`px-6 py-2.5 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all ${darkMode ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white' : 'bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white'}`}>Apply</button>
                     <button onClick={resetAll} className={`px-6 py-2.5 rounded-lg font-semibold border-2 transition-all ${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-200 border-gray-600' : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-300 hover:border-gray-400'}`}>Reset</button>
                   </div>
@@ -562,13 +785,13 @@ export default function DSAVisualizer() {
 
                 <div className={`w-full p-5 rounded-xl border shadow-md transition-colors duration-300 ${darkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-blue-50 border-blue-200'}`}>
                   <div className="flex items-center justify-center gap-4 mb-4">
-                    <button onClick={stepBack} className={`p-2.5 rounded-lg border-2 transition-all shadow-sm ${darkMode ? 'bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600 hover:border-cyan-400' : 'bg-white border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-500'}`}><SkipBack size={20} /></button>
-                    <button onClick={togglePlay} className={`p-3 rounded-lg border-2 text-white transition-all shadow-md ${darkMode ? 'bg-gradient-to-r from-cyan-500 to-blue-600 border-cyan-600 hover:from-cyan-600 hover:to-blue-700' : 'bg-gradient-to-r from-blue-500 to-blue-700 border-blue-600 hover:from-blue-600 hover:to-blue-800'}`}>{playing ? <Pause size={20} /> : <Play size={20} />}</button>
-                    <button onClick={stepForward} className={`p-2.5 rounded-lg border-2 transition-all shadow-sm ${darkMode ? 'bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600 hover:border-cyan-400' : 'bg-white border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-500'}`}><SkipForward size={20} /></button>
+                    <button onClick={stepBack} title="Previous step (or press left arrow)" className={`p-2.5 rounded-lg border-2 transition-all shadow-sm ${darkMode ? 'bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600 hover:border-cyan-400' : 'bg-white border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-500'}`}><SkipBack size={20} /></button>
+                    <button onClick={togglePlay} title={playing ? "Pause animation (or press space)" : "Play animation (or press space)"} className={`p-3 rounded-lg border-2 text-white transition-all shadow-md ${darkMode ? 'bg-gradient-to-r from-cyan-500 to-blue-600 border-cyan-600 hover:from-cyan-600 hover:to-blue-700' : 'bg-gradient-to-r from-blue-500 to-blue-700 border-blue-600 hover:from-blue-600 hover:to-blue-800'}`}>{playing ? <Pause size={20} /> : <Play size={20} />}</button>
+                    <button onClick={stepForward} title="Next step (or press right arrow)" className={`p-2.5 rounded-lg border-2 transition-all shadow-sm ${darkMode ? 'bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600 hover:border-cyan-400' : 'bg-white border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-500'}`}><SkipForward size={20} /></button>
 
                     <div className="ml-6 flex items-center gap-2">
                       <div className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Speed (ms)</div>
-                      <input type="number" value={speed} onChange={handleSpeedChange} className={`w-24 px-3 py-1.5 rounded-lg border-2 outline-none transition-all ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20' : 'bg-white text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'}`} />
+                      <input type="number" value={speed} onChange={handleSpeedChange} title="Animation speed in milliseconds" className={`w-24 px-3 py-1.5 rounded-lg border-2 outline-none transition-all ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20' : 'bg-white text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'}`} />
                     </div>
                   </div>
 
