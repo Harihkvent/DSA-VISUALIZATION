@@ -4,7 +4,7 @@ An interactive web application for visualizing data structures and algorithms. B
 
 ## ✨ Features
 
-- **18 Algorithm Implementations** across 7 categories
+- **43+ Algorithm Implementations** across 13 categories
 - **Step-by-step visualization** with play/pause controls
 - **Dark mode support** for comfortable viewing
 - **Interactive input** - test with your own data
@@ -14,40 +14,73 @@ An interactive web application for visualizing data structures and algorithms. B
 
 ## 📚 Algorithms Included
 
-### Sorting (5 algorithms)
+### Sorting (7 algorithms)
 - Bubble Sort
 - Selection Sort
 - Insertion Sort
 - Merge Sort
 - Quick Sort
+- Heap Sort ⭐ NEW
+- Counting Sort ⭐ NEW
 
-### Searching (2 algorithms)
+### Searching (3 algorithms)
 - Linear Search
 - Binary Search
+- Two Sum ⭐ NEW
 
 ### Two Pointers / Sliding Window (2 algorithms)
 - Reverse Vowels
 - Max Window Sum (k)
 
+### Arrays (2 algorithms) ⭐ NEW CATEGORY
+- Prefix Sum
+- Rotate Array
+
+### Strings (3 algorithms) ⭐ NEW CATEGORY
+- Palindrome Check
+- Anagram Check
+- KMP Pattern Matching
+
+### Linked List (2 algorithms) ⭐ NEW CATEGORY
+- LinkedList Reverse
+- Floyd Cycle Detection
+
 ### Data Structures (4 operations)
 - Stack (LIFO)
 - Queue (FIFO)
-- LinkedList Reverse
 - Heapify (Max Heap)
+- Trie Insert ⭐ NEW
 
-### Graphs (2 algorithms)
+### Bit Manipulation (1 algorithm) ⭐ NEW CATEGORY
+- Bit Operations (AND, OR, XOR, NOT, shifts)
+
+### Graphs (5 algorithms)
 - BFS (Breadth-First Search)
 - DFS (Depth-First Search)
+- Dijkstra's Shortest Path ⭐ NEW
+- Topological Sort ⭐ NEW
+- Cycle Detection ⭐ NEW
 
-### Trees (4 traversals)
-- Preorder Traversal
-- Inorder Traversal
-- Postorder Traversal
-- Level-order (BFS)
+### Trees (3 visualizations)
+- Binary Tree Traversals (Preorder, Inorder, Postorder, Level-order)
+- BST Insert ⭐ NEW
+- LCA (Lowest Common Ancestor) ⭐ NEW
 
-### Classic Algorithms (2)
+### Dynamic Programming (6 algorithms) ⭐ NEW CATEGORY
+- Fibonacci DP
 - Kadane's Algorithm (Max Subarray)
-- Fibonacci with Dynamic Programming
+- 0/1 Knapsack
+- Longest Common Subsequence (LCS)
+- Longest Increasing Subsequence (LIS)
+- Coin Change
+
+### Greedy Algorithms (2 algorithms) ⭐ NEW CATEGORY
+- Activity Selection
+- Fractional Knapsack
+
+### Backtracking (2 algorithms) ⭐ NEW CATEGORY
+- N-Queens Problem
+- Generate Permutations
 
 ## 🚀 Quick Start
 
