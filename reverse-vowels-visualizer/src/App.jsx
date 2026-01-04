@@ -1295,7 +1295,7 @@ export default function DSAVisualizer() {
     if (info.k) setKWindow(Number(info.k));
     
     // For string-based algorithms
-    if (algorithm === 'Reverse Vowels') {
+    if (algorithm === 'Reverse Vowels' || concept === 'Strings' || algorithm === 'Trie Insert') {
       setInputStr(info.example);
     }
     
@@ -1309,9 +1309,16 @@ export default function DSAVisualizer() {
       setInputAdjString(info.example);
     }
     
-    // For Fibonacci
-    if (algorithm === 'Fibonacci DP') {
+    // For Fibonacci and N-Queens
+    if (algorithm === 'Fibonacci DP' || algorithm === 'N Queens') {
       setFibN(Number(info.example));
+    }
+    
+    // For algorithms that need special string format (DP, Greedy)
+    if (algorithm === '0/1 Knapsack' || algorithm === 'LCS' || algorithm === 'Coin Change' || 
+        algorithm === 'Activity Selection' || algorithm === 'Fractional Knapsack' || 
+        algorithm === 'KMP Pattern Match' || algorithm === 'Anagram Check') {
+      setInputStr(info.example);
     }
   }
 
@@ -1690,10 +1697,15 @@ export default function DSAVisualizer() {
                   )}
 
                   <div className="space-y-4 mb-4">
-                    {(concept === 'Sorting' || concept === 'Searching' || (concept === 'Data Structures' && ['Heapify', 'LinkedList Reverse'].includes(algorithm)) || (concept === 'Algorithms' && ['Kadane (Max Subarray)'].includes(algorithm)) || (concept === 'Trees') || (concept === 'Two Pointers / Sliding Window' && algorithm === 'Max Window Sum (k)')) && (
+                    {(concept === 'Sorting' || concept === 'Searching' || concept === 'Arrays' || concept === 'Linked List' || 
+                      (concept === 'Data Structures' && ['Heapify'].includes(algorithm)) || 
+                      (concept === 'Dynamic Programming' && ['Kadane (Max Subarray)', 'LIS'].includes(algorithm)) || 
+                      (concept === 'Trees') || 
+                      (concept === 'Two Pointers / Sliding Window' && algorithm === 'Max Window Sum (k)') ||
+                      (concept === 'Backtracking' && algorithm === 'Generate Permutations')) && (
                       <div>
                         <label className={`block mb-2 text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Input Array</label>
-                        <input type="text" value={inputArrayString} onChange={(e) => setInputArrayString(e.target.value)} className={`w-full px-4 py-2.5 rounded-lg border outline-none transition-all ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 placeholder-gray-500' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder-gray-500'}`} placeholder={concept === 'Searching' ? 'e.g. 2,3,4,10,40' : concept === 'Algorithms' ? 'e.g. -2,1,-3,4,-1,2,1' : concept === 'Trees' ? 'e.g. 1,2,3,4,5,6,7' : 'e.g. 5,3,8,1,2'} />
+                        <input type="text" value={inputArrayString} onChange={(e) => setInputArrayString(e.target.value)} className={`w-full px-4 py-2.5 rounded-lg border outline-none transition-all ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 placeholder-gray-500' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder-gray-500'}`} placeholder={concept === 'Searching' ? 'e.g. 2,3,4,10,40' : concept === 'Dynamic Programming' ? 'e.g. -2,1,-3,4,-1,2,1' : concept === 'Trees' ? 'e.g. 1,2,3,4,5,6,7' : concept === 'Linked List' ? 'e.g. 1,2,3,4,5' : 'e.g. 5,3,8,1,2'} />
                       </div>
                     )}
 
@@ -1704,16 +1716,50 @@ export default function DSAVisualizer() {
                       </div>
                     )}
 
-                    {concept === 'Two Pointers / Sliding Window' && algorithm === 'Reverse Vowels' && (
+                    {(concept === 'Strings' || concept === 'Dynamic Programming' && ['LCS', '0/1 Knapsack', 'Coin Change'].includes(algorithm) || 
+                      concept === 'Greedy Algorithms' || concept === 'Data Structures' && algorithm === 'Trie Insert' ||
+                      concept === 'Two Pointers / Sliding Window' && algorithm === 'Reverse Vowels') && (
                       <div>
-                        <label className={`block mb-2 text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Input String</label>
-                        <input type="text" value={inputStr} onChange={(e) => setInputStr(e.target.value)} className={`w-full px-4 py-2.5 rounded-lg border outline-none transition-all ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 placeholder-gray-500' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder-gray-500'}`} placeholder="e.g. hello world" />
+                        <label className={`block mb-2 text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>
+                          {algorithm === 'Palindrome Check' ? 'Input String' : 
+                           algorithm === 'Anagram Check' ? 'Two Strings (comma separated)' :
+                           algorithm === 'KMP Pattern Match' ? 'Text,Pattern (comma separated)' :
+                           algorithm === 'LCS' ? 'Two Strings (comma separated)' :
+                           algorithm === '0/1 Knapsack' ? 'Values|Weights|Capacity' :
+                           algorithm === 'Coin Change' ? 'Coins|Amount' :
+                           algorithm === 'Activity Selection' ? 'Start Times|End Times' :
+                           algorithm === 'Fractional Knapsack' ? 'Values|Weights|Capacity' :
+                           algorithm === 'Trie Insert' ? 'Words (comma separated)' :
+                           'Input String'}
+                        </label>
+                        <input type="text" value={inputStr} onChange={(e) => setInputStr(e.target.value)} className={`w-full px-4 py-2.5 rounded-lg border outline-none transition-all ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 placeholder-gray-500' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder-gray-500'}`} placeholder={
+                          algorithm === 'Palindrome Check' ? 'e.g. racecar' :
+                          algorithm === 'Anagram Check' ? 'e.g. listen,silent' :
+                          algorithm === 'KMP Pattern Match' ? 'e.g. ababcababa,aba' :
+                          algorithm === 'LCS' ? 'e.g. ABCDGH,AEDFHR' :
+                          algorithm === '0/1 Knapsack' ? 'e.g. 60,100,120|10,20,30|50' :
+                          algorithm === 'Coin Change' ? 'e.g. 1,2,5|11' :
+                          algorithm === 'Activity Selection' ? 'e.g. 1,3,0,5|2,4,6,7' :
+                          algorithm === 'Fractional Knapsack' ? 'e.g. 60,100,120|10,20,30|50' :
+                          algorithm === 'Trie Insert' ? 'e.g. cat,car,card,dog' :
+                          'e.g. hello world'
+                        } />
+                        {(algorithm === '0/1 Knapsack' || algorithm === 'Coin Change' || algorithm === 'Activity Selection' || algorithm === 'Fractional Knapsack') && (
+                          <p className={`text-xs mt-1.5 ${darkMode ? 'text-gray-500' : 'text-gray-600'}`}>
+                            {algorithm === '0/1 Knapsack' || algorithm === 'Fractional Knapsack' ? 'Format: values|weights|capacity' :
+                             algorithm === 'Coin Change' ? 'Format: coins|amount' :
+                             'Format: start_times|end_times'}
+                          </p>
+                        )}
                       </div>
                     )}
 
-                    {concept === 'Two Pointers / Sliding Window' && algorithm === 'Max Window Sum (k)' && (
+                    {((concept === 'Two Pointers / Sliding Window' && algorithm === 'Max Window Sum (k)') || 
+                      (concept === 'Arrays' && algorithm === 'Rotate Array')) && (
                       <div>
-                        <label className={`block mb-2 text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Window Size (k)</label>
+                        <label className={`block mb-2 text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>
+                          {algorithm === 'Rotate Array' ? 'Rotation Count (k)' : 'Window Size (k)'}
+                        </label>
                         <input type="number" value={kWindow} onChange={(e) => setKWindow(Number(e.target.value))} className={`w-full px-4 py-2.5 rounded-lg border outline-none transition-all ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 placeholder-gray-500' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder-gray-500'}`} placeholder="e.g. 3" />
                       </div>
                     )}
@@ -1729,15 +1775,26 @@ export default function DSAVisualizer() {
                     {concept === 'Graphs' && (
                       <div>
                         <label className={`block mb-2 text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Adjacency List</label>
-                        <input type="text" value={inputAdjString} onChange={(e) => setInputAdjString(e.target.value)} className={`w-full px-4 py-2.5 rounded-lg border outline-none transition-all ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 placeholder-gray-500' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder-gray-500'}`} placeholder="e.g. 0:1,2;1:0,3;2:0;3:1" />
-                        <p className={`text-xs mt-1.5 ${darkMode ? 'text-gray-500' : 'text-gray-600'}`}>Format: node:neighbor1,neighbor2;... or JSON: [[1,2],[0,3],[0],[1]]</p>
+                        <input type="text" value={inputAdjString} onChange={(e) => setInputAdjString(e.target.value)} className={`w-full px-4 py-2.5 rounded-lg border outline-none transition-all ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 placeholder-gray-500' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder-gray-500'}`} placeholder={algorithm === 'Dijkstra' ? 'e.g. 0:1:4,2:8;1:0:4,2:8;2:0:8,1:8' : 'e.g. 0:1,2;1:0,3;2:0;3:1'} />
+                        <p className={`text-xs mt-1.5 ${darkMode ? 'text-gray-500' : 'text-gray-600'}`}>
+                          {algorithm === 'Dijkstra' ? 'Format: from:to:weight;...' : 'Format: node:neighbor1,neighbor2;... or JSON: [[1,2],[0,3],[0],[1]]'}
+                        </p>
                       </div>
                     )}
 
-                    {concept === 'Algorithms' && algorithm === 'Fibonacci DP' && (
+                    {(concept === 'Dynamic Programming' && algorithm === 'Fibonacci DP' || concept === 'Backtracking' && algorithm === 'N Queens') && (
                       <div>
-                        <label className={`block mb-2 text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>n for Fibonacci DP</label>
-                        <input type="number" value={fibN} onChange={(e) => setFibN(Number(e.target.value))} className={`w-full px-4 py-2.5 rounded-lg border outline-none transition-all ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 placeholder-gray-500' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder-gray-500'}`} placeholder="e.g. 8" />
+                        <label className={`block mb-2 text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>
+                          {algorithm === 'N Queens' ? 'Board Size (N)' : 'n for Fibonacci DP'}
+                        </label>
+                        <input type="number" value={fibN} onChange={(e) => setFibN(Number(e.target.value))} className={`w-full px-4 py-2.5 rounded-lg border outline-none transition-all ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 placeholder-gray-500' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder-gray-500'}`} placeholder={algorithm === 'N Queens' ? 'e.g. 4' : 'e.g. 8'} />
+                      </div>
+                    )}
+
+                    {concept === 'Bit Manipulation' && (
+                      <div>
+                        <label className={`block mb-2 text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Two Numbers (comma separated)</label>
+                        <input type="text" value={inputArrayString} onChange={(e) => setInputArrayString(e.target.value)} className={`w-full px-4 py-2.5 rounded-lg border outline-none transition-all ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 placeholder-gray-500' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder-gray-500'}`} placeholder="e.g. 5,3" />
                       </div>
                     )}
                   </div>
