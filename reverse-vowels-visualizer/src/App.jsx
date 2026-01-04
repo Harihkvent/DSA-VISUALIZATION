@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { Play, Pause, SkipForward, SkipBack, Moon, Sun, Info, Zap, BookOpen } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Moon, Sun, Info, Zap, BookOpen, Code, FileText, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import Footer from './components/Footer'; // adjust path as needed
+import { codeExamples } from './codeExamples';
+import { algorithmWalkthroughs } from './algorithmWalkthroughs';
 
 /* ---------- parsers & generators (kept intact, safe guards kept) ---------- */
 
@@ -329,6 +331,11 @@ export default function DSAVisualizer() {
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(600);
   const [darkMode, setDarkMode] = useState(false);
+  
+  // Tab and sidebar state
+  const [activeTab, setActiveTab] = useState('visualization'); // 'explanation', 'code', 'visualization'
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState('cpp'); // 'cpp', 'java', 'python'
 
   useEffect(() => {
     setAlgorithm(prev => concepts[concept].includes(prev) ? prev : concepts[concept][0]);
@@ -613,9 +620,11 @@ export default function DSAVisualizer() {
         </header>
 
         <main className="flex-1 overflow-auto p-4">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 h-full">
-            <div className="md:col-span-5 flex flex-col h-full">
-              <div className={`flex-1 rounded-xl border p-4 shadow-lg h-full transition-colors duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-blue-200 shadow-blue-50'}`}>
+          <div className="flex gap-4 h-full">
+            {/* Collapsible Sidebar */}
+            <div className={`transition-all duration-300 flex-shrink-0 ${sidebarCollapsed ? 'w-0' : 'w-full md:w-96'} overflow-hidden`}>
+              <div className={`flex flex-col h-full ${sidebarCollapsed ? 'hidden' : 'block'}`}>
+                <div className={`flex-1 rounded-xl border p-4 shadow-lg h-full transition-colors duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-blue-200 shadow-blue-50'}`}>
                 <div className="flex flex-col h-full">
                   <div className="flex gap-2 mb-3">
                     <select value={concept} onChange={(e) => setConcept(e.target.value)} className={`flex-1 px-3 py-2 text-sm rounded-lg border outline-none transition-all font-medium ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500'}`}>
@@ -720,13 +729,186 @@ export default function DSAVisualizer() {
                 </div>
               </div>
             </div>
+            </div>
 
-            <div className="md:col-span-7 flex flex-col gap-3 h-full">
-              <div className={`rounded-xl border p-4 shadow-lg flex flex-col h-full transition-colors duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-blue-200 shadow-blue-50'}`}>
-                <h2 className={`text-lg font-bold mb-3 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Visualization</h2>
+            {/* Toggle Sidebar Button */}
+            <button
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className={`fixed left-4 top-1/2 -translate-y-1/2 z-10 p-2 rounded-lg shadow-lg transition-all ${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-cyan-400 border border-gray-600' : 'bg-white hover:bg-blue-50 text-blue-700 border border-blue-200'}`}
+              title={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
+            >
+              {sidebarCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+            </button>
 
-                <div className="flex-1 w-full flex items-center justify-center mb-3 overflow-auto">
-                  <div className="w-full">
+            {/* Main Content Area with Tabs */}
+            <div className="flex-1 flex flex-col gap-3 h-full min-w-0">
+              <div className={`rounded-xl border shadow-lg flex flex-col h-full transition-colors duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-blue-200 shadow-blue-50'}`}>
+                {/* Tab Navigation */}
+                <div className={`flex border-b ${darkMode ? 'border-gray-700' : 'border-blue-200'}`}>
+                  <button
+                    onClick={() => setActiveTab('explanation')}
+                    className={`flex-1 px-4 py-3 font-semibold flex items-center justify-center gap-2 transition-all ${
+                      activeTab === 'explanation'
+                        ? darkMode ? 'bg-gray-700 text-cyan-400 border-b-2 border-cyan-400' : 'bg-blue-50 text-blue-700 border-b-2 border-blue-500'
+                        : darkMode ? 'text-gray-400 hover:text-gray-300 hover:bg-gray-750' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                    }`}
+                  >
+                    <FileText size={18} />
+                    <span className="hidden sm:inline">Explanation</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('code')}
+                    className={`flex-1 px-4 py-3 font-semibold flex items-center justify-center gap-2 transition-all ${
+                      activeTab === 'code'
+                        ? darkMode ? 'bg-gray-700 text-cyan-400 border-b-2 border-cyan-400' : 'bg-blue-50 text-blue-700 border-b-2 border-blue-500'
+                        : darkMode ? 'text-gray-400 hover:text-gray-300 hover:bg-gray-750' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                    }`}
+                  >
+                    <Code size={18} />
+                    <span className="hidden sm:inline">Code</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('visualization')}
+                    className={`flex-1 px-4 py-3 font-semibold flex items-center justify-center gap-2 transition-all ${
+                      activeTab === 'visualization'
+                        ? darkMode ? 'bg-gray-700 text-cyan-400 border-b-2 border-cyan-400' : 'bg-blue-50 text-blue-700 border-b-2 border-blue-500'
+                        : darkMode ? 'text-gray-400 hover:text-gray-300 hover:bg-gray-750' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                    }`}
+                  >
+                    <Eye size={18} />
+                    <span className="hidden sm:inline">Visualization</span>
+                  </button>
+                </div>
+
+                {/* Tab Content */}
+                <div className="flex-1 overflow-auto p-4">
+                  {/* Explanation Tab */}
+                  {activeTab === 'explanation' && (
+                    <div className="space-y-6">
+                      {algorithmWalkthroughs[algorithm] ? (
+                        <>
+                          <div>
+                            <h3 className={`text-xl font-bold mb-2 ${darkMode ? 'text-cyan-300' : 'text-blue-700'}`}>Overview</h3>
+                            <p className={`text-base leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                              {algorithmWalkthroughs[algorithm].overview}
+                            </p>
+                          </div>
+
+                          <div>
+                            <h3 className={`text-xl font-bold mb-3 ${darkMode ? 'text-cyan-300' : 'text-blue-700'}`}>How It Works</h3>
+                            <div className="space-y-2">
+                              {algorithmWalkthroughs[algorithm].howItWorks.map((step, idx) => (
+                                <div key={idx} className={`flex gap-3 ${step === '' ? 'mt-3' : ''}`}>
+                                  {step !== '' && (
+                                    <>
+                                      <div className={`flex-shrink-0 w-1.5 h-1.5 rounded-full mt-2 ${darkMode ? 'bg-cyan-400' : 'bg-blue-500'}`} />
+                                      <p className={`flex-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{step}</p>
+                                    </>
+                                  )}
+                                  {step === '' && <div className="h-2" />}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div>
+                            <h3 className={`text-xl font-bold mb-3 ${darkMode ? 'text-cyan-300' : 'text-blue-700'}`}>Key Insights</h3>
+                            <div className="space-y-2">
+                              {algorithmWalkthroughs[algorithm].keyInsights.map((insight, idx) => (
+                                <div key={idx} className="flex gap-3">
+                                  <div className={`flex-shrink-0 w-1.5 h-1.5 rounded-full mt-2 ${darkMode ? 'bg-green-400' : 'bg-green-600'}`} />
+                                  <p className={`flex-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{insight}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div>
+                            <h3 className={`text-xl font-bold mb-3 ${darkMode ? 'text-cyan-300' : 'text-blue-700'}`}>Common Use Cases</h3>
+                            <div className="space-y-2">
+                              {algorithmWalkthroughs[algorithm].commonUseCases.map((useCase, idx) => (
+                                <div key={idx} className="flex gap-3">
+                                  <div className={`flex-shrink-0 w-1.5 h-1.5 rounded-full mt-2 ${darkMode ? 'bg-amber-400' : 'bg-orange-500'}`} />
+                                  <p className={`flex-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{useCase}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className={`mt-6 p-4 rounded-lg border ${darkMode ? 'bg-blue-900/20 border-blue-700/50' : 'bg-blue-50 border-blue-300'}`}>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <h4 className={`font-bold mb-1 ${darkMode ? 'text-cyan-300' : 'text-blue-800'}`}>Time Complexity</h4>
+                                <code className={`text-lg font-mono ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>{algorithmInfo[algorithm]?.timeComplexity}</code>
+                              </div>
+                              <div>
+                                <h4 className={`font-bold mb-1 ${darkMode ? 'text-cyan-300' : 'text-blue-800'}`}>Space Complexity</h4>
+                                <code className={`text-lg font-mono ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>{algorithmInfo[algorithm]?.spaceComplexity}</code>
+                              </div>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <p className={`text-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                          Walkthrough not available for this algorithm yet.
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Code Tab */}
+                  {activeTab === 'code' && (
+                    <div className="space-y-4">
+                      <div className="flex gap-2 mb-4">
+                        <button
+                          onClick={() => setSelectedLanguage('cpp')}
+                          className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                            selectedLanguage === 'cpp'
+                              ? darkMode ? 'bg-cyan-600 text-white' : 'bg-blue-600 text-white'
+                              : darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          }`}
+                        >
+                          C++
+                        </button>
+                        <button
+                          onClick={() => setSelectedLanguage('java')}
+                          className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                            selectedLanguage === 'java'
+                              ? darkMode ? 'bg-cyan-600 text-white' : 'bg-blue-600 text-white'
+                              : darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          }`}
+                        >
+                          Java
+                        </button>
+                        <button
+                          onClick={() => setSelectedLanguage('python')}
+                          className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                            selectedLanguage === 'python'
+                              ? darkMode ? 'bg-cyan-600 text-white' : 'bg-blue-600 text-white'
+                              : darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          }`}
+                        >
+                          Python
+                        </button>
+                      </div>
+
+                      {codeExamples[algorithm] && codeExamples[algorithm][selectedLanguage] ? (
+                        <pre className={`p-4 rounded-lg overflow-x-auto ${darkMode ? 'bg-gray-900 text-gray-200' : 'bg-gray-100 text-gray-800'} border ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}>
+                          <code className="text-sm font-mono">{codeExamples[algorithm][selectedLanguage]}</code>
+                        </pre>
+                      ) : (
+                        <p className={`text-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                          Code example not available for this algorithm in {selectedLanguage === 'cpp' ? 'C++' : selectedLanguage === 'java' ? 'Java' : 'Python'}.
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Visualization Tab */}
+                  {activeTab === 'visualization' && (
+                    <div>
+                      <div className="flex-1 w-full flex items-center justify-center mb-3 overflow-auto">
+                        <div className="w-full">
                     {/* show readable error or no-step message if steps empty */}
                     {steps.length === 0 && (
                       <div className={`text-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>No visualization. Enter inputs and click <strong className={darkMode ? 'text-cyan-400' : 'text-blue-600'}>Apply</strong>.</div>
@@ -791,61 +973,65 @@ export default function DSAVisualizer() {
                   </div>
                 </div>
 
-                <div className={`w-full p-3 rounded-lg border shadow-md transition-colors duration-300 ${darkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-blue-50 border-blue-200'}`}>
-                  <div className="flex items-center justify-center gap-3 mb-2">
-                    <button onClick={stepBack} title="Previous step (or press left arrow)" className={`p-2 rounded-lg border transition-all shadow-sm ${darkMode ? 'bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600 hover:border-cyan-400' : 'bg-white border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-500'}`}><SkipBack size={18} /></button>
-                    <button onClick={togglePlay} title={playing ? "Pause animation (or press space)" : "Play animation (or press space)"} className={`p-2.5 rounded-lg border text-white transition-all shadow-md ${darkMode ? 'bg-gradient-to-r from-cyan-500 to-blue-600 border-cyan-600 hover:from-cyan-600 hover:to-blue-700' : 'bg-gradient-to-r from-blue-500 to-blue-700 border-blue-600 hover:from-blue-600 hover:to-blue-800'}`}>{playing ? <Pause size={18} /> : <Play size={18} />}</button>
-                    <button onClick={stepForward} title="Next step (or press right arrow)" className={`p-2 rounded-lg border transition-all shadow-sm ${darkMode ? 'bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600 hover:border-cyan-400' : 'bg-white border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-500'}`}><SkipForward size={18} /></button>
+                        {/* Visualization Controls */}
+                        <div className={`w-full p-3 rounded-lg border shadow-md transition-colors duration-300 ${darkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-blue-50 border-blue-200'}`}>
+                      <div className="flex items-center justify-center gap-3 mb-2">
+                        <button onClick={stepBack} title="Previous step (or press left arrow)" className={`p-2 rounded-lg border transition-all shadow-sm ${darkMode ? 'bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600 hover:border-cyan-400' : 'bg-white border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-500'}`}><SkipBack size={18} /></button>
+                        <button onClick={togglePlay} title={playing ? "Pause animation (or press space)" : "Play animation (or press space)"} className={`p-2.5 rounded-lg border text-white transition-all shadow-md ${darkMode ? 'bg-gradient-to-r from-cyan-500 to-blue-600 border-cyan-600 hover:from-cyan-600 hover:to-blue-700' : 'bg-gradient-to-r from-blue-500 to-blue-700 border-blue-600 hover:from-blue-600 hover:to-blue-800'}`}>{playing ? <Pause size={18} /> : <Play size={18} />}</button>
+                        <button onClick={stepForward} title="Next step (or press right arrow)" className={`p-2 rounded-lg border transition-all shadow-sm ${darkMode ? 'bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600 hover:border-cyan-400' : 'bg-white border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-500'}`}><SkipForward size={18} /></button>
 
-                    <div className="ml-4 flex items-center gap-2">
-                      <div className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Speed (ms)</div>
-                      <input type="number" value={speed} onChange={handleSpeedChange} title="Animation speed in milliseconds" className={`w-20 px-2 py-1 text-sm rounded-lg border outline-none transition-all ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400' : 'bg-white text-gray-800 border-blue-300 focus:border-blue-500'}`} />
-                    </div>
-                  </div>
-
-                  <div>
-                    <input
-                      type="range"
-                      min={0}
-                      max={Math.max(0, (steps.length - 1))}
-                      value={index}
-                      onChange={handleIndexChange}
-                      className={`w-full h-2 rounded-lg appearance-none cursor-pointer ${darkMode ? 'bg-gray-600 accent-cyan-500' : 'bg-blue-200 accent-blue-500'}`}
-                    />
-                    <div className={`flex justify-between text-xs mt-1 font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      <div>0</div>
-                      <div>{steps.length > 0 ? steps.length - 1 : 0}</div>
-                    </div>
-
-                    <div className="mt-2 text-center">
-                      <div className={`font-semibold text-sm ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>{cur.description || 'No step'}</div>
-                      <div className={`text-xs mt-0.5 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{`Step ${index} of ${Math.max(0, steps.length - 1)}`}</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-3">
-                  <div className={`border p-3 rounded-lg shadow-md transition-colors duration-300 ${darkMode ? 'bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700' : 'bg-gradient-to-br from-blue-50 to-gray-50 border-blue-200'}`}>
-                    <h3 className={`font-bold text-sm mb-2 text-center ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Legend</h3>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-blue-400 border border-blue-600 rounded shadow-sm" />
-                        <span className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Window / Pointer</span>
+                        <div className="ml-4 flex items-center gap-2">
+                          <div className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Speed (ms)</div>
+                          <input type="number" value={speed} onChange={handleSpeedChange} title="Animation speed in milliseconds" className={`w-20 px-2 py-1 text-sm rounded-lg border outline-none transition-all ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400' : 'bg-white text-gray-800 border-blue-300 focus:border-blue-500'}`} />
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-pink-400 border border-pink-600 rounded shadow-sm" />
-                        <span className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Pivot</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-orange-400 border border-orange-600 rounded shadow-sm" />
-                        <span className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Swapping</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-green-400 border border-green-600 rounded shadow-sm" />
-                        <span className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Best / Result</span>
+
+                      <div>
+                        <input
+                          type="range"
+                          min={0}
+                          max={Math.max(0, (steps.length - 1))}
+                          value={index}
+                          onChange={handleIndexChange}
+                          className={`w-full h-2 rounded-lg appearance-none cursor-pointer ${darkMode ? 'bg-gray-600 accent-cyan-500' : 'bg-blue-200 accent-blue-500'}`}
+                        />
+                        <div className={`flex justify-between text-xs mt-1 font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                          <div>0</div>
+                          <div>{steps.length > 0 ? steps.length - 1 : 0}</div>
+                        </div>
+
+                        <div className="mt-2 text-center">
+                          <div className={`font-semibold text-sm ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>{cur.description || 'No step'}</div>
+                          <div className={`text-xs mt-0.5 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{`Step ${index} of ${Math.max(0, steps.length - 1)}`}</div>
+                        </div>
                       </div>
                     </div>
-                  </div>
+
+                    <div className="mt-3">
+                      <div className={`border p-3 rounded-lg shadow-md transition-colors duration-300 ${darkMode ? 'bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700' : 'bg-gradient-to-br from-blue-50 to-gray-50 border-blue-200'}`}>
+                        <h3 className={`font-bold text-sm mb-2 text-center ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Legend</h3>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 bg-blue-400 border border-blue-600 rounded shadow-sm" />
+                            <span className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Window / Pointer</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 bg-pink-400 border border-pink-600 rounded shadow-sm" />
+                            <span className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Pivot</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 bg-orange-400 border border-orange-600 rounded shadow-sm" />
+                            <span className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Swapping</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 bg-green-400 border border-green-600 rounded shadow-sm" />
+                            <span className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Best / Result</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
