@@ -501,27 +501,255 @@ export default function DSAVisualizer() {
     );
   };
 
-  const renderTree = (tree = [], meta = {}) => (
-    <div className="flex flex-col items-center gap-6">
-      <div className="flex gap-3 flex-wrap justify-center">
-        {(tree || []).map((n) => (
-          <div key={n.id} className={`px-5 py-3 rounded-xl border-2 transition-all font-semibold ${meta.visiting === n.id ? (darkMode ? 'bg-purple-900/40 border-purple-400 text-purple-300 scale-105 shadow-lg' : 'bg-blue-400 border-blue-600 text-white scale-105 shadow-lg shadow-blue-200') : (darkMode ? 'bg-gray-700 border-gray-600 text-gray-200 shadow-md' : 'bg-gray-100 border-gray-300 text-gray-800 shadow-md')}`}>{n.val}</div>
-        ))}
-      </div>
-      <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>(Nodes shown left-to-right by id — traversal highlights visiting nodes)</div>
-    </div>
-  );
-
-  const renderGraph = (adj = [], meta = {}) => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-      {(adj || []).map((neis, i) => (
-        <div key={i} className={`p-4 rounded-xl border-2 transition-all ${meta.visiting === i ? (darkMode ? 'bg-teal-900/40 border-teal-400 text-teal-300 shadow-lg' : 'bg-green-400 border-green-600 text-white shadow-lg shadow-green-200') : (darkMode ? 'bg-gray-700 border-gray-600 text-gray-200 shadow-md' : 'bg-gray-100 border-gray-300 text-gray-800 shadow-md')}`}>
-          <div className="font-bold text-lg">{i}</div>
-          <div className={`text-sm mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>→ {Array.isArray(neis) ? neis.join(', ') : ''}</div>
+  const renderTree = (tree = [], meta = {}) => {
+    if (!tree || tree.length === 0) return null;
+    
+    // Calculate tree levels for proper layout
+    const levels = [];
+    const visited = new Set();
+    
+    const buildLevels = (nodeId, level = 0) => {
+      if (nodeId === null || nodeId === undefined || visited.has(nodeId) || !tree[nodeId]) return;
+      visited.add(nodeId);
+      
+      if (!levels[level]) levels[level] = [];
+      levels[level].push(tree[nodeId]);
+      
+      const node = tree[nodeId];
+      if (node.left !== null && node.left !== undefined) buildLevels(node.left, level + 1);
+      if (node.right !== null && node.right !== undefined) buildLevels(node.right, level + 1);
+    };
+    
+    buildLevels(0);
+    
+    return (
+      <div className="flex flex-col items-center gap-8 w-full overflow-x-auto py-4">
+        <svg className="w-full" style={{ minHeight: `${levels.length * 120}px` }} viewBox="0 0 800 600" preserveAspectRatio="xMidYMid meet">
+          {/* Draw edges first */}
+          {levels.map((level, levelIdx) => 
+            level.map((node) => {
+              const nodeX = 400 + (node.id - Math.pow(2, levelIdx) + 0.5) * (600 / Math.pow(2, levelIdx));
+              const nodeY = 60 + levelIdx * 120;
+              
+              return (
+                <g key={`edges-${node.id}`}>
+                  {node.left !== null && node.left !== undefined && tree[node.left] && (
+                    <line
+                      x1={nodeX}
+                      y1={nodeY}
+                      x2={400 + (node.left - Math.pow(2, levelIdx + 1) + 0.5) * (600 / Math.pow(2, levelIdx + 1))}
+                      y2={60 + (levelIdx + 1) * 120}
+                      className={`transition-all duration-300 ${darkMode ? 'stroke-gray-600' : 'stroke-gray-400'}`}
+                      strokeWidth="2"
+                    />
+                  )}
+                  {node.right !== null && node.right !== undefined && tree[node.right] && (
+                    <line
+                      x1={nodeX}
+                      y1={nodeY}
+                      x2={400 + (node.right - Math.pow(2, levelIdx + 1) + 0.5) * (600 / Math.pow(2, levelIdx + 1))}
+                      y2={60 + (levelIdx + 1) * 120}
+                      className={`transition-all duration-300 ${darkMode ? 'stroke-gray-600' : 'stroke-gray-400'}`}
+                      strokeWidth="2"
+                    />
+                  )}
+                </g>
+              );
+            })
+          )}
+          
+          {/* Draw nodes on top */}
+          {levels.map((level, levelIdx) =>
+            level.map((node) => {
+              const nodeX = 400 + (node.id - Math.pow(2, levelIdx) + 0.5) * (600 / Math.pow(2, levelIdx));
+              const nodeY = 60 + levelIdx * 120;
+              const isVisiting = meta.visiting === node.id;
+              
+              return (
+                <g key={`node-${node.id}`}>
+                  <circle
+                    cx={nodeX}
+                    cy={nodeY}
+                    r="25"
+                    className={`transition-all duration-300 ${
+                      isVisiting
+                        ? darkMode
+                          ? 'fill-purple-500 stroke-purple-300'
+                          : 'fill-blue-500 stroke-blue-700'
+                        : darkMode
+                        ? 'fill-gray-700 stroke-gray-500'
+                        : 'fill-gray-100 stroke-gray-400'
+                    }`}
+                    strokeWidth="3"
+                  />
+                  <text
+                    x={nodeX}
+                    y={nodeY}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    className={`font-bold text-lg ${
+                      isVisiting
+                        ? darkMode
+                          ? 'fill-purple-100'
+                          : 'fill-white'
+                        : darkMode
+                        ? 'fill-gray-200'
+                        : 'fill-gray-800'
+                    }`}
+                  >
+                    {node.val}
+                  </text>
+                </g>
+              );
+            })
+          )}
+        </svg>
+        <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          Tree structure with parent-child relationships
         </div>
-      ))}
-    </div>
-  );
+      </div>
+    );
+  };
+
+  const renderGraph = (adj = [], meta = {}) => {
+    if (!adj || adj.length === 0) return null;
+    
+    // Calculate node positions in a circle layout
+    const numNodes = adj.length;
+    const radius = Math.min(250, 150 + numNodes * 15);
+    const centerX = 400;
+    const centerY = 300;
+    
+    const nodePositions = adj.map((_, i) => {
+      const angle = (i * 2 * Math.PI) / numNodes - Math.PI / 2;
+      return {
+        x: centerX + radius * Math.cos(angle),
+        y: centerY + radius * Math.sin(angle),
+        id: i
+      };
+    });
+    
+    return (
+      <div className="flex flex-col items-center gap-6 w-full overflow-x-auto py-4">
+        <svg className="w-full" style={{ minHeight: '600px' }} viewBox="0 0 800 600" preserveAspectRatio="xMidYMid meet">
+          {/* Draw edges first */}
+          {adj.map((neighbors, i) => {
+            const from = nodePositions[i];
+            return neighbors.map((neighborId) => {
+              if (neighborId >= nodePositions.length) return null;
+              const to = nodePositions[neighborId];
+              
+              // Check if this is a bi-directional edge and if we already drew it
+              const isBackEdge = i > neighborId && adj[neighborId]?.includes(i);
+              
+              return (
+                <g key={`edge-${i}-${neighborId}`}>
+                  <line
+                    x1={from.x}
+                    y1={from.y}
+                    x2={to.x}
+                    y2={to.y}
+                    className={`transition-all duration-300 ${
+                      (meta.visiting === i || meta.from === i) && meta.discovered === neighborId
+                        ? darkMode
+                          ? 'stroke-cyan-400'
+                          : 'stroke-blue-500'
+                        : darkMode
+                        ? 'stroke-gray-600'
+                        : 'stroke-gray-400'
+                    }`}
+                    strokeWidth={
+                      (meta.visiting === i || meta.from === i) && meta.discovered === neighborId ? '3' : '2'
+                    }
+                    markerEnd={isBackEdge ? '' : 'url(#arrowhead)'}
+                  />
+                  {/* Edge weight label (if needed in future) */}
+                </g>
+              );
+            });
+          })}
+          
+          {/* Define arrowhead marker */}
+          <defs>
+            <marker
+              id="arrowhead"
+              markerWidth="10"
+              markerHeight="10"
+              refX="9"
+              refY="3"
+              orient="auto"
+              markerUnits="strokeWidth"
+            >
+              <path
+                d="M0,0 L0,6 L9,3 z"
+                className={darkMode ? 'fill-gray-600' : 'fill-gray-400'}
+              />
+            </marker>
+          </defs>
+          
+          {/* Draw nodes on top */}
+          {nodePositions.map((pos) => {
+            const isVisiting = meta.visiting === pos.id;
+            const isDiscovered = meta.discovered === pos.id;
+            
+            return (
+              <g key={`node-${pos.id}`}>
+                <circle
+                  cx={pos.x}
+                  cy={pos.y}
+                  r="30"
+                  className={`transition-all duration-300 ${
+                    isVisiting
+                      ? darkMode
+                        ? 'fill-teal-500 stroke-teal-300'
+                        : 'fill-green-500 stroke-green-700'
+                      : isDiscovered
+                      ? darkMode
+                        ? 'fill-cyan-600 stroke-cyan-400'
+                        : 'fill-blue-400 stroke-blue-600'
+                      : darkMode
+                      ? 'fill-gray-700 stroke-gray-500'
+                      : 'fill-gray-100 stroke-gray-400'
+                  }`}
+                  strokeWidth="3"
+                />
+                <text
+                  x={pos.x}
+                  y={pos.y}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  className={`font-bold text-xl ${
+                    isVisiting || isDiscovered
+                      ? 'fill-white'
+                      : darkMode
+                      ? 'fill-gray-200'
+                      : 'fill-gray-800'
+                  }`}
+                >
+                  {pos.id}
+                </text>
+                
+                {/* Show neighbors on hover or when visiting */}
+                {isVisiting && adj[pos.id] && adj[pos.id].length > 0 && (
+                  <text
+                    x={pos.x}
+                    y={pos.y + 50}
+                    textAnchor="middle"
+                    className={`text-xs ${darkMode ? 'fill-gray-400' : 'fill-gray-600'}`}
+                  >
+                    → {adj[pos.id].join(', ')}
+                  </text>
+                )}
+              </g>
+            );
+          })}
+        </svg>
+        <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          Graph with nodes and directed edges • Nodes arranged in circular layout
+        </div>
+      </div>
+    );
+  };
 
   /* ---------- control handlers ---------- */
 
