@@ -501,255 +501,27 @@ export default function DSAVisualizer() {
     );
   };
 
-  const renderTree = (tree = [], meta = {}) => {
-    if (!tree || tree.length === 0) return null;
-    
-    // Calculate tree levels for proper layout
-    const levels = [];
-    const visited = new Set();
-    
-    const buildLevels = (nodeId, level = 0) => {
-      if (nodeId === null || nodeId === undefined || visited.has(nodeId) || !tree[nodeId]) return;
-      visited.add(nodeId);
-      
-      if (!levels[level]) levels[level] = [];
-      levels[level].push(tree[nodeId]);
-      
-      const node = tree[nodeId];
-      if (node.left !== null && node.left !== undefined) buildLevels(node.left, level + 1);
-      if (node.right !== null && node.right !== undefined) buildLevels(node.right, level + 1);
-    };
-    
-    buildLevels(0);
-    
-    return (
-      <div className="flex flex-col items-center gap-8 w-full overflow-x-auto py-4">
-        <svg className="w-full" style={{ minHeight: `${levels.length * 120}px` }} viewBox="0 0 800 600" preserveAspectRatio="xMidYMid meet">
-          {/* Draw edges first */}
-          {levels.map((level, levelIdx) => 
-            level.map((node) => {
-              const nodeX = 400 + (node.id - Math.pow(2, levelIdx) + 0.5) * (600 / Math.pow(2, levelIdx));
-              const nodeY = 60 + levelIdx * 120;
-              
-              return (
-                <g key={`edges-${node.id}`}>
-                  {node.left !== null && node.left !== undefined && tree[node.left] && (
-                    <line
-                      x1={nodeX}
-                      y1={nodeY}
-                      x2={400 + (node.left - Math.pow(2, levelIdx + 1) + 0.5) * (600 / Math.pow(2, levelIdx + 1))}
-                      y2={60 + (levelIdx + 1) * 120}
-                      className={`transition-all duration-300 ${darkMode ? 'stroke-gray-600' : 'stroke-gray-400'}`}
-                      strokeWidth="2"
-                    />
-                  )}
-                  {node.right !== null && node.right !== undefined && tree[node.right] && (
-                    <line
-                      x1={nodeX}
-                      y1={nodeY}
-                      x2={400 + (node.right - Math.pow(2, levelIdx + 1) + 0.5) * (600 / Math.pow(2, levelIdx + 1))}
-                      y2={60 + (levelIdx + 1) * 120}
-                      className={`transition-all duration-300 ${darkMode ? 'stroke-gray-600' : 'stroke-gray-400'}`}
-                      strokeWidth="2"
-                    />
-                  )}
-                </g>
-              );
-            })
-          )}
-          
-          {/* Draw nodes on top */}
-          {levels.map((level, levelIdx) =>
-            level.map((node) => {
-              const nodeX = 400 + (node.id - Math.pow(2, levelIdx) + 0.5) * (600 / Math.pow(2, levelIdx));
-              const nodeY = 60 + levelIdx * 120;
-              const isVisiting = meta.visiting === node.id;
-              
-              return (
-                <g key={`node-${node.id}`}>
-                  <circle
-                    cx={nodeX}
-                    cy={nodeY}
-                    r="25"
-                    className={`transition-all duration-300 ${
-                      isVisiting
-                        ? darkMode
-                          ? 'fill-purple-500 stroke-purple-300'
-                          : 'fill-blue-500 stroke-blue-700'
-                        : darkMode
-                        ? 'fill-gray-700 stroke-gray-500'
-                        : 'fill-gray-100 stroke-gray-400'
-                    }`}
-                    strokeWidth="3"
-                  />
-                  <text
-                    x={nodeX}
-                    y={nodeY}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    className={`font-bold text-lg ${
-                      isVisiting
-                        ? darkMode
-                          ? 'fill-purple-100'
-                          : 'fill-white'
-                        : darkMode
-                        ? 'fill-gray-200'
-                        : 'fill-gray-800'
-                    }`}
-                  >
-                    {node.val}
-                  </text>
-                </g>
-              );
-            })
-          )}
-        </svg>
-        <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-          Tree structure with parent-child relationships
-        </div>
+  const renderTree = (tree = [], meta = {}) => (
+    <div className="flex flex-col items-center gap-6">
+      <div className="flex gap-3 flex-wrap justify-center">
+        {(tree || []).map((n) => (
+          <div key={n.id} className={`px-5 py-3 rounded-xl border-2 transition-all font-semibold ${meta.visiting === n.id ? (darkMode ? 'bg-purple-900/40 border-purple-400 text-purple-300 scale-105 shadow-lg' : 'bg-blue-400 border-blue-600 text-white scale-105 shadow-lg shadow-blue-200') : (darkMode ? 'bg-gray-700 border-gray-600 text-gray-200 shadow-md' : 'bg-gray-100 border-gray-300 text-gray-800 shadow-md')}`}>{n.val}</div>
+        ))}
       </div>
-    );
-  };
+      <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>(Nodes shown left-to-right by id — traversal highlights visiting nodes)</div>
+    </div>
+  );
 
-  const renderGraph = (adj = [], meta = {}) => {
-    if (!adj || adj.length === 0) return null;
-    
-    // Calculate node positions in a circle layout
-    const numNodes = adj.length;
-    const radius = Math.min(250, 150 + numNodes * 15);
-    const centerX = 400;
-    const centerY = 300;
-    
-    const nodePositions = adj.map((_, i) => {
-      const angle = (i * 2 * Math.PI) / numNodes - Math.PI / 2;
-      return {
-        x: centerX + radius * Math.cos(angle),
-        y: centerY + radius * Math.sin(angle),
-        id: i
-      };
-    });
-    
-    return (
-      <div className="flex flex-col items-center gap-6 w-full overflow-x-auto py-4">
-        <svg className="w-full" style={{ minHeight: '600px' }} viewBox="0 0 800 600" preserveAspectRatio="xMidYMid meet">
-          {/* Draw edges first */}
-          {adj.map((neighbors, i) => {
-            const from = nodePositions[i];
-            return neighbors.map((neighborId) => {
-              if (neighborId >= nodePositions.length) return null;
-              const to = nodePositions[neighborId];
-              
-              // Check if this is a bi-directional edge and if we already drew it
-              const isBackEdge = i > neighborId && adj[neighborId]?.includes(i);
-              
-              return (
-                <g key={`edge-${i}-${neighborId}`}>
-                  <line
-                    x1={from.x}
-                    y1={from.y}
-                    x2={to.x}
-                    y2={to.y}
-                    className={`transition-all duration-300 ${
-                      (meta.visiting === i || meta.from === i) && meta.discovered === neighborId
-                        ? darkMode
-                          ? 'stroke-cyan-400'
-                          : 'stroke-blue-500'
-                        : darkMode
-                        ? 'stroke-gray-600'
-                        : 'stroke-gray-400'
-                    }`}
-                    strokeWidth={
-                      (meta.visiting === i || meta.from === i) && meta.discovered === neighborId ? '3' : '2'
-                    }
-                    markerEnd={isBackEdge ? '' : 'url(#arrowhead)'}
-                  />
-                  {/* Edge weight label (if needed in future) */}
-                </g>
-              );
-            });
-          })}
-          
-          {/* Define arrowhead marker */}
-          <defs>
-            <marker
-              id="arrowhead"
-              markerWidth="10"
-              markerHeight="10"
-              refX="9"
-              refY="3"
-              orient="auto"
-              markerUnits="strokeWidth"
-            >
-              <path
-                d="M0,0 L0,6 L9,3 z"
-                className={darkMode ? 'fill-gray-600' : 'fill-gray-400'}
-              />
-            </marker>
-          </defs>
-          
-          {/* Draw nodes on top */}
-          {nodePositions.map((pos) => {
-            const isVisiting = meta.visiting === pos.id;
-            const isDiscovered = meta.discovered === pos.id;
-            
-            return (
-              <g key={`node-${pos.id}`}>
-                <circle
-                  cx={pos.x}
-                  cy={pos.y}
-                  r="30"
-                  className={`transition-all duration-300 ${
-                    isVisiting
-                      ? darkMode
-                        ? 'fill-teal-500 stroke-teal-300'
-                        : 'fill-green-500 stroke-green-700'
-                      : isDiscovered
-                      ? darkMode
-                        ? 'fill-cyan-600 stroke-cyan-400'
-                        : 'fill-blue-400 stroke-blue-600'
-                      : darkMode
-                      ? 'fill-gray-700 stroke-gray-500'
-                      : 'fill-gray-100 stroke-gray-400'
-                  }`}
-                  strokeWidth="3"
-                />
-                <text
-                  x={pos.x}
-                  y={pos.y}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  className={`font-bold text-xl ${
-                    isVisiting || isDiscovered
-                      ? 'fill-white'
-                      : darkMode
-                      ? 'fill-gray-200'
-                      : 'fill-gray-800'
-                  }`}
-                >
-                  {pos.id}
-                </text>
-                
-                {/* Show neighbors on hover or when visiting */}
-                {isVisiting && adj[pos.id] && adj[pos.id].length > 0 && (
-                  <text
-                    x={pos.x}
-                    y={pos.y + 50}
-                    textAnchor="middle"
-                    className={`text-xs ${darkMode ? 'fill-gray-400' : 'fill-gray-600'}`}
-                  >
-                    → {adj[pos.id].join(', ')}
-                  </text>
-                )}
-              </g>
-            );
-          })}
-        </svg>
-        <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-          Graph with nodes and directed edges • Nodes arranged in circular layout
+  const renderGraph = (adj = [], meta = {}) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      {(adj || []).map((neis, i) => (
+        <div key={i} className={`p-4 rounded-xl border-2 transition-all ${meta.visiting === i ? (darkMode ? 'bg-teal-900/40 border-teal-400 text-teal-300 shadow-lg' : 'bg-green-400 border-green-600 text-white shadow-lg shadow-green-200') : (darkMode ? 'bg-gray-700 border-gray-600 text-gray-200 shadow-md' : 'bg-gray-100 border-gray-300 text-gray-800 shadow-md')}`}>
+          <div className="font-bold text-lg">{i}</div>
+          <div className={`text-sm mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>→ {Array.isArray(neis) ? neis.join(', ') : ''}</div>
         </div>
-      </div>
-    );
-  };
+      ))}
+    </div>
+  );
 
   /* ---------- control handlers ---------- */
 
@@ -823,56 +595,57 @@ export default function DSAVisualizer() {
   return (
     <div className={`min-h-screen w-full transition-colors duration-300 ${darkMode ? 'bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800' : 'bg-gradient-to-br from-slate-50 via-blue-50 to-gray-50'}`}>
       <div className="flex flex-col min-h-screen">
-        <header className={`flex-none py-8 px-8 backdrop-blur-sm border-b shadow-sm transition-colors duration-300 ${darkMode ? 'bg-gray-800/80 border-gray-700/60' : 'bg-white/90 border-blue-200'}`}>
+        {/* Compact Header */}
+        <header className={`flex-none py-4 px-6 backdrop-blur-sm border-b shadow-sm transition-colors duration-300 ${darkMode ? 'bg-gray-800/80 border-gray-700/60' : 'bg-white/90 border-blue-200'}`}>
           <div className="max-w-full flex items-center justify-between">
             <div>
-              <h1 className={`text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight ${darkMode ? 'bg-gradient-to-r from-cyan-300 to-blue-400 bg-clip-text text-transparent' : 'text-blue-900'}`}>DSA Visualizer</h1>
-              <p className={`text-lg md:text-xl mt-3 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Interactive steps and visual explanations for common algorithms & data structures.</p>
+              <h1 className={`text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight ${darkMode ? 'bg-gradient-to-r from-cyan-300 to-blue-400 bg-clip-text text-transparent' : 'text-blue-900'}`}>DSA Visualizer</h1>
+              <p className={`text-sm md:text-base ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Interactive algorithm & data structure visualization</p>
             </div>
             <button
               onClick={() => setDarkMode(!darkMode)}
-              className={`p-3 rounded-xl transition-all duration-300 ${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-blue-400' : 'bg-blue-50 hover:bg-blue-100 text-blue-700'} shadow-md hover:shadow-lg`}
+              className={`p-2.5 rounded-lg transition-all duration-300 ${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-blue-400' : 'bg-blue-50 hover:bg-blue-100 text-blue-700'} shadow-md hover:shadow-lg`}
               aria-label="Toggle dark mode"
             >
-              {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+              {darkMode ? <Sun size={18} /> : <Moon size={18} />}
             </button>
           </div>
         </header>
 
-        <main className="flex-1 overflow-auto p-6">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-full">
+        <main className="flex-1 overflow-auto p-4">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 h-full">
             <div className="md:col-span-5 flex flex-col h-full">
-              <div className={`flex-1 rounded-2xl border p-6 shadow-lg h-full transition-colors duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-blue-200 shadow-blue-50'}`}>
+              <div className={`flex-1 rounded-xl border p-4 shadow-lg h-full transition-colors duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-blue-200 shadow-blue-50'}`}>
                 <div className="flex flex-col h-full">
-                  <div className="flex gap-3 mb-4">
-                    <select value={concept} onChange={(e) => setConcept(e.target.value)} className={`flex-1 px-4 py-2.5 rounded-lg border outline-none transition-all font-medium ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'}`}>
+                  <div className="flex gap-2 mb-3">
+                    <select value={concept} onChange={(e) => setConcept(e.target.value)} className={`flex-1 px-3 py-2 text-sm rounded-lg border outline-none transition-all font-medium ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500'}`}>
                       {Object.keys(concepts).map((c) => (<option key={c} value={c}>{c}</option>))}
                     </select>
-                    <select value={algorithm} onChange={(e) => setAlgorithm(e.target.value)} className={`w-44 px-4 py-2.5 rounded-lg border outline-none transition-all font-medium ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'}`}>
+                    <select value={algorithm} onChange={(e) => setAlgorithm(e.target.value)} className={`flex-1 px-3 py-2 text-sm rounded-lg border outline-none transition-all font-medium ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500'}`}>
                       {concepts[concept].map((alg) => (<option key={alg} value={alg}>{alg}</option>))}
                     </select>
                   </div>
 
-                  {/* Algorithm Info Section */}
+                  {/* Compact Algorithm Info */}
                   {algorithmInfo[algorithm] && (
-                    <div className={`mb-4 p-4 rounded-xl border-2 transition-all ${darkMode ? 'bg-gradient-to-br from-blue-900/20 to-cyan-900/20 border-blue-700/50' : 'bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-300'}`}>
+                    <div className={`mb-3 p-3 rounded-lg border transition-all ${darkMode ? 'bg-gradient-to-br from-blue-900/20 to-cyan-900/20 border-blue-700/50' : 'bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-300'}`}>
                       <div className="flex items-start gap-2 mb-2">
-                        <BookOpen size={18} className={darkMode ? 'text-cyan-400 mt-0.5' : 'text-blue-600 mt-0.5'} />
+                        <BookOpen size={16} className={darkMode ? 'text-cyan-400 mt-0.5' : 'text-blue-600 mt-0.5'} />
                         <div className="flex-1">
-                          <h3 className={`font-bold text-sm mb-1 ${darkMode ? 'text-cyan-300' : 'text-blue-800'}`}>{algorithm}</h3>
+                          <h3 className={`font-bold text-xs mb-1 ${darkMode ? 'text-cyan-300' : 'text-blue-800'}`}>{algorithm}</h3>
                           <p className={`text-xs leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{algorithmInfo[algorithm].description}</p>
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-2 mt-3">
-                        <div className={`flex items-center gap-1.5 text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                          <Zap size={14} className={darkMode ? 'text-yellow-400' : 'text-yellow-600'} />
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className={`flex items-center gap-1 text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                          <Zap size={12} className={darkMode ? 'text-yellow-400' : 'text-yellow-600'} />
                           <span className="font-medium">Time:</span>
-                          <code className={`px-1.5 py-0.5 rounded text-xs font-mono ${darkMode ? 'bg-gray-700 text-cyan-300' : 'bg-white text-blue-700'}`}>{algorithmInfo[algorithm].timeComplexity}</code>
+                          <code className={`px-1 py-0.5 rounded text-xs font-mono ${darkMode ? 'bg-gray-700 text-cyan-300' : 'bg-white text-blue-700'}`}>{algorithmInfo[algorithm].timeComplexity}</code>
                         </div>
-                        <div className={`flex items-center gap-1.5 text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                          <Info size={14} className={darkMode ? 'text-green-400' : 'text-green-600'} />
+                        <div className={`flex items-center gap-1 text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                          <Info size={12} className={darkMode ? 'text-green-400' : 'text-green-600'} />
                           <span className="font-medium">Space:</span>
-                          <code className={`px-1.5 py-0.5 rounded text-xs font-mono ${darkMode ? 'bg-gray-700 text-cyan-300' : 'bg-white text-blue-700'}`}>{algorithmInfo[algorithm].spaceComplexity}</code>
+                          <code className={`px-1 py-0.5 rounded text-xs font-mono ${darkMode ? 'bg-gray-700 text-cyan-300' : 'bg-white text-blue-700'}`}>{algorithmInfo[algorithm].spaceComplexity}</code>
                         </div>
                       </div>
                       {algorithmInfo[algorithm].bestFor && (
@@ -948,11 +721,11 @@ export default function DSAVisualizer() {
               </div>
             </div>
 
-            <div className="md:col-span-7 flex flex-col gap-4 h-full">
-              <div className={`rounded-2xl border p-6 shadow-lg flex flex-col h-full transition-colors duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-blue-200 shadow-blue-50'}`}>
-                <h2 className={`text-xl font-bold mb-4 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Visualization</h2>
+            <div className="md:col-span-7 flex flex-col gap-3 h-full">
+              <div className={`rounded-xl border p-4 shadow-lg flex flex-col h-full transition-colors duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-blue-200 shadow-blue-50'}`}>
+                <h2 className={`text-lg font-bold mb-3 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Visualization</h2>
 
-                <div className="flex-1 w-full flex items-center justify-center mb-4 overflow-auto">
+                <div className="flex-1 w-full flex items-center justify-center mb-3 overflow-auto">
                   <div className="w-full">
                     {/* show readable error or no-step message if steps empty */}
                     {steps.length === 0 && (
@@ -1018,15 +791,15 @@ export default function DSAVisualizer() {
                   </div>
                 </div>
 
-                <div className={`w-full p-5 rounded-xl border shadow-md transition-colors duration-300 ${darkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-blue-50 border-blue-200'}`}>
-                  <div className="flex items-center justify-center gap-4 mb-4">
-                    <button onClick={stepBack} title="Previous step (or press left arrow)" className={`p-2.5 rounded-lg border-2 transition-all shadow-sm ${darkMode ? 'bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600 hover:border-cyan-400' : 'bg-white border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-500'}`}><SkipBack size={20} /></button>
-                    <button onClick={togglePlay} title={playing ? "Pause animation (or press space)" : "Play animation (or press space)"} className={`p-3 rounded-lg border-2 text-white transition-all shadow-md ${darkMode ? 'bg-gradient-to-r from-cyan-500 to-blue-600 border-cyan-600 hover:from-cyan-600 hover:to-blue-700' : 'bg-gradient-to-r from-blue-500 to-blue-700 border-blue-600 hover:from-blue-600 hover:to-blue-800'}`}>{playing ? <Pause size={20} /> : <Play size={20} />}</button>
-                    <button onClick={stepForward} title="Next step (or press right arrow)" className={`p-2.5 rounded-lg border-2 transition-all shadow-sm ${darkMode ? 'bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600 hover:border-cyan-400' : 'bg-white border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-500'}`}><SkipForward size={20} /></button>
+                <div className={`w-full p-3 rounded-lg border shadow-md transition-colors duration-300 ${darkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-blue-50 border-blue-200'}`}>
+                  <div className="flex items-center justify-center gap-3 mb-2">
+                    <button onClick={stepBack} title="Previous step (or press left arrow)" className={`p-2 rounded-lg border transition-all shadow-sm ${darkMode ? 'bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600 hover:border-cyan-400' : 'bg-white border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-500'}`}><SkipBack size={18} /></button>
+                    <button onClick={togglePlay} title={playing ? "Pause animation (or press space)" : "Play animation (or press space)"} className={`p-2.5 rounded-lg border text-white transition-all shadow-md ${darkMode ? 'bg-gradient-to-r from-cyan-500 to-blue-600 border-cyan-600 hover:from-cyan-600 hover:to-blue-700' : 'bg-gradient-to-r from-blue-500 to-blue-700 border-blue-600 hover:from-blue-600 hover:to-blue-800'}`}>{playing ? <Pause size={18} /> : <Play size={18} />}</button>
+                    <button onClick={stepForward} title="Next step (or press right arrow)" className={`p-2 rounded-lg border transition-all shadow-sm ${darkMode ? 'bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600 hover:border-cyan-400' : 'bg-white border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-500'}`}><SkipForward size={18} /></button>
 
-                    <div className="ml-6 flex items-center gap-2">
-                      <div className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Speed (ms)</div>
-                      <input type="number" value={speed} onChange={handleSpeedChange} title="Animation speed in milliseconds" className={`w-24 px-3 py-1.5 rounded-lg border-2 outline-none transition-all ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20' : 'bg-white text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'}`} />
+                    <div className="ml-4 flex items-center gap-2">
+                      <div className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Speed (ms)</div>
+                      <input type="number" value={speed} onChange={handleSpeedChange} title="Animation speed in milliseconds" className={`w-20 px-2 py-1 text-sm rounded-lg border outline-none transition-all ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400' : 'bg-white text-gray-800 border-blue-300 focus:border-blue-500'}`} />
                     </div>
                   </div>
 
@@ -1039,37 +812,37 @@ export default function DSAVisualizer() {
                       onChange={handleIndexChange}
                       className={`w-full h-2 rounded-lg appearance-none cursor-pointer ${darkMode ? 'bg-gray-600 accent-cyan-500' : 'bg-blue-200 accent-blue-500'}`}
                     />
-                    <div className={`flex justify-between text-xs mt-1.5 font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <div className={`flex justify-between text-xs mt-1 font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                       <div>0</div>
                       <div>{steps.length > 0 ? steps.length - 1 : 0}</div>
                     </div>
 
-                    <div className="mt-3 text-center">
-                      <div className={`font-semibold text-base ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>{cur.description || 'No step'}</div>
-                      <div className={`text-xs mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{`Step ${index} of ${Math.max(0, steps.length - 1)}`}</div>
+                    <div className="mt-2 text-center">
+                      <div className={`font-semibold text-sm ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>{cur.description || 'No step'}</div>
+                      <div className={`text-xs mt-0.5 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{`Step ${index} of ${Math.max(0, steps.length - 1)}`}</div>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-4">
-                  <div className={`border-2 p-5 rounded-xl shadow-md transition-colors duration-300 ${darkMode ? 'bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700' : 'bg-gradient-to-br from-blue-50 to-gray-50 border-blue-200'}`}>
-                    <h3 className={`font-bold text-lg mb-4 text-center ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Legend</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-blue-400 border-2 border-blue-600 rounded-lg shadow-sm" />
-                        <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Window / Pointer</span>
+                <div className="mt-3">
+                  <div className={`border p-3 rounded-lg shadow-md transition-colors duration-300 ${darkMode ? 'bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700' : 'bg-gradient-to-br from-blue-50 to-gray-50 border-blue-200'}`}>
+                    <h3 className={`font-bold text-sm mb-2 text-center ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Legend</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-blue-400 border border-blue-600 rounded shadow-sm" />
+                        <span className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Window / Pointer</span>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-pink-400 border-2 border-pink-600 rounded-lg shadow-sm" />
-                        <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Pivot</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-pink-400 border border-pink-600 rounded shadow-sm" />
+                        <span className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Pivot</span>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-orange-400 border-2 border-orange-600 rounded-lg shadow-sm" />
-                        <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Swapping</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-orange-400 border border-orange-600 rounded shadow-sm" />
+                        <span className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Swapping</span>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-green-400 border-2 border-green-600 rounded-lg shadow-sm" />
-                        <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Best / Result</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-green-400 border border-green-600 rounded shadow-sm" />
+                        <span className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Best / Result</span>
                       </div>
                     </div>
                   </div>
