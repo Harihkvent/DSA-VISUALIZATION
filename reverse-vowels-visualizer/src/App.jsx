@@ -435,36 +435,6 @@ export default function DSAVisualizer() {
     return () => clearTimeout(t);
   }, [playing, index, steps, speed]);
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (steps.length === 0) return;
-      
-      switch(e.key) {
-        case ' ': // Space - Play/Pause
-          e.preventDefault();
-          togglePlay();
-          break;
-        case 'ArrowRight': // Right arrow - Next step
-          e.preventDefault();
-          stepForward();
-          break;
-        case 'ArrowLeft': // Left arrow - Previous step
-          e.preventDefault();
-          stepBack();
-          break;
-        case 'Escape': // Escape - Stop playing
-          if (playing) setPlaying(false);
-          break;
-        default:
-          break;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [steps.length, playing, togglePlay, stepForward, stepBack]);
-
   const cur = steps[index] || {};
 
   /* ---------- render helpers ---------- */
@@ -569,6 +539,36 @@ export default function DSAVisualizer() {
     setIndex(i => Math.max(0, i - 1));
     setPlaying(false);
   }, []);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (steps.length === 0) return;
+      
+      switch(e.key) {
+        case ' ': // Space - Play/Pause
+          e.preventDefault();
+          togglePlay();
+          break;
+        case 'ArrowRight': // Right arrow - Next step
+          e.preventDefault();
+          stepForward();
+          break;
+        case 'ArrowLeft': // Left arrow - Previous step
+          e.preventDefault();
+          stepBack();
+          break;
+        case 'Escape': // Escape - Stop playing
+          if (playing) setPlaying(false);
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [steps.length, playing, togglePlay, stepForward, stepBack]);
 
   function handleIndexChange(e) {
     const v = Number(e.target.value);
