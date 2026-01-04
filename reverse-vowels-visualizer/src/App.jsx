@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Play, Pause, SkipForward, SkipBack, Moon, Sun } from 'lucide-react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import { Play, Pause, SkipForward, SkipBack, Moon, Sun, Info, Zap, BookOpen } from 'lucide-react';
 import Footer from './components/Footer'; // adjust path as needed
 
 /* ---------- parsers & generators (kept intact, safe guards kept) ---------- */
@@ -34,7 +34,9 @@ function parseAdjList(str) {
       const parsed = JSON.parse(str);
       if (Array.isArray(parsed)) return parsed.map(row => Array.isArray(row) ? row : []);
     }
-  } catch (e) {}
+  } catch {
+    // JSON parsing failed, try string format
+  }
   const parts = str.split(';').map(p => p.trim()).filter(Boolean);
   if (parts.length === 0) return null;
   const adj = [];
@@ -52,6 +54,140 @@ function parseAdjList(str) {
   for (let i = 0; i <= maxIndex; i++) out[i] = Array.isArray(adj[i]) ? adj[i] : [];
   return out.length ? out : null;
 }
+
+/* ---------- Algorithm Metadata ---------- */
+
+const algorithmInfo = {
+  'Bubble': {
+    description: 'Repeatedly steps through the list, compares adjacent elements and swaps them if they are in the wrong order.',
+    timeComplexity: 'O(n²)',
+    spaceComplexity: 'O(1)',
+    example: '5,3,8,1,2',
+    bestFor: 'Learning sorting basics, small datasets'
+  },
+  'Selection': {
+    description: 'Divides input into sorted and unsorted regions, repeatedly selects the smallest element from unsorted region.',
+    timeComplexity: 'O(n²)',
+    spaceComplexity: 'O(1)',
+    example: '64,25,12,22,11',
+    bestFor: 'Small datasets, minimal memory writes'
+  },
+  'Insertion': {
+    description: 'Builds final sorted array one item at a time, inserting each element into its proper position.',
+    timeComplexity: 'O(n²)',
+    spaceComplexity: 'O(1)',
+    example: '12,11,13,5,6',
+    bestFor: 'Nearly sorted data, online algorithms'
+  },
+  'Merge': {
+    description: 'Divides array into halves, recursively sorts them, then merges the sorted halves.',
+    timeComplexity: 'O(n log n)',
+    spaceComplexity: 'O(n)',
+    example: '38,27,43,3,9,82,10',
+    bestFor: 'Large datasets, stable sorting, linked lists'
+  },
+  'Quick': {
+    description: 'Picks a pivot element, partitions array around pivot, then recursively sorts partitions.',
+    timeComplexity: 'O(n log n) avg, O(n²) worst',
+    spaceComplexity: 'O(log n)',
+    example: '10,7,8,9,1,5',
+    bestFor: 'General purpose, in-place sorting'
+  },
+  'Linear': {
+    description: 'Sequentially checks each element until target is found or list ends.',
+    timeComplexity: 'O(n)',
+    spaceComplexity: 'O(1)',
+    example: '2,3,4,10,40',
+    target: '10',
+    bestFor: 'Unsorted data, small datasets'
+  },
+  'Binary': {
+    description: 'Repeatedly divides sorted array in half, eliminating half of remaining elements each step.',
+    timeComplexity: 'O(log n)',
+    spaceComplexity: 'O(1)',
+    example: '2,3,4,10,40',
+    target: '10',
+    bestFor: 'Sorted arrays, large datasets'
+  },
+  'Reverse Vowels': {
+    description: 'Uses two pointers from both ends to swap vowels in a string.',
+    timeComplexity: 'O(n)',
+    spaceComplexity: 'O(n)',
+    example: 'hello world',
+    bestFor: 'String manipulation, two-pointer technique'
+  },
+  'Max Window Sum (k)': {
+    description: 'Slides a fixed-size window through array to find subarray with maximum sum.',
+    timeComplexity: 'O(n)',
+    spaceComplexity: 'O(1)',
+    example: '1,4,2,10,2,3,1,0,20',
+    k: '3',
+    bestFor: 'Subarray problems, optimization'
+  },
+  'Stack': {
+    description: 'Last-In-First-Out (LIFO) data structure. Elements are added and removed from the same end.',
+    timeComplexity: 'O(1) per operation',
+    spaceComplexity: 'O(n)',
+    example: 'push:1,push:2,push:3,pop,push:4',
+    bestFor: 'Function calls, undo operations, expression evaluation'
+  },
+  'Queue': {
+    description: 'First-In-First-Out (FIFO) data structure. Elements are added at rear and removed from front.',
+    timeComplexity: 'O(1) per operation',
+    spaceComplexity: 'O(n)',
+    example: 'enqueue:1,enqueue:2,dequeue,enqueue:3',
+    bestFor: 'Task scheduling, BFS, buffers'
+  },
+  'LinkedList Reverse': {
+    description: 'Reverses the direction of pointers in a singly linked list.',
+    timeComplexity: 'O(n)',
+    spaceComplexity: 'O(1)',
+    example: '1,2,3,4,5',
+    bestFor: 'Pointer manipulation, in-place reversal'
+  },
+  'Heapify': {
+    description: 'Converts an array into a max-heap data structure where parent nodes are greater than children.',
+    timeComplexity: 'O(n)',
+    spaceComplexity: 'O(1)',
+    example: '4,10,3,5,1',
+    bestFor: 'Priority queues, heap sort, top-k problems'
+  },
+  'BFS': {
+    description: 'Explores graph level by level, visiting all neighbors before moving to next level.',
+    timeComplexity: 'O(V + E)',
+    spaceComplexity: 'O(V)',
+    example: '0:1,2;1:0,3;2:0;3:1',
+    bestFor: 'Shortest path, level-order traversal'
+  },
+  'DFS': {
+    description: 'Explores graph by going as deep as possible along each branch before backtracking.',
+    timeComplexity: 'O(V + E)',
+    spaceComplexity: 'O(V)',
+    example: '0:1,2;1:0,3;2:0;3:1',
+    bestFor: 'Pathfinding, cycle detection, topological sort'
+  },
+  'Binary Tree Traversals': {
+    description: 'Different ways to visit all nodes: Preorder (Root-Left-Right), Inorder (Left-Root-Right), Postorder (Left-Right-Root), Level-order (BFS).',
+    timeComplexity: 'O(n)',
+    spaceComplexity: 'O(h) recursive, O(n) iterative',
+    example: '1,2,3,4,5,6,7',
+    bestFor: 'Tree processing, expression trees'
+  },
+  'Kadane (Max Subarray)': {
+    description: 'Finds maximum sum of contiguous subarray using dynamic programming.',
+    timeComplexity: 'O(n)',
+    spaceComplexity: 'O(1)',
+    example: '-2,1,-3,4,-1,2,1,-5,4',
+    bestFor: 'Maximum subarray problems, DP introduction'
+  },
+  'Fibonacci DP': {
+    description: 'Computes Fibonacci numbers using dynamic programming with memoization.',
+    timeComplexity: 'O(n)',
+    spaceComplexity: 'O(n)',
+    example: '8',
+    bestFor: 'Introduction to DP, optimization problems'
+  }
+};
 
 /* ---------- step generators ---------- */
 
@@ -204,6 +340,36 @@ export default function DSAVisualizer() {
     generateStepsFromInputs(parsed);
   }
 
+  function loadExample() {
+    const info = algorithmInfo[algorithm];
+    if (!info) return;
+    
+    // Load example inputs based on algorithm
+    if (info.example) setInputArrayString(info.example);
+    if (info.target) setTarget(info.target);
+    if (info.k) setKWindow(Number(info.k));
+    
+    // For string-based algorithms
+    if (algorithm === 'Reverse Vowels') {
+      setInputStr(info.example);
+    }
+    
+    // For Stack and Queue operations
+    if (algorithm === 'Stack' || algorithm === 'Queue') {
+      setInputOpsString(info.example);
+    }
+    
+    // For graph algorithms
+    if (concept === 'Graphs') {
+      setInputAdjString(info.example);
+    }
+    
+    // For Fibonacci
+    if (algorithm === 'Fibonacci DP') {
+      setFibN(Number(info.example));
+    }
+  }
+
   function generateStepsFromInputs(arr = inputArray) {
     const ops = parseOps(inputOpsString);
     const adj = parseAdjList(inputAdjString);
@@ -324,7 +490,7 @@ export default function DSAVisualizer() {
 
     return (
       <div className="flex gap-6 items-center justify-center flex-wrap">
-        {order.map((n, idx) => (
+        {order.map((n) => (
           <div key={n.id} className="flex items-center gap-2">
             <div className={`px-4 py-3 rounded-xl border-2 font-semibold transition-all ${meta.reversing === n.id ? (darkMode ? 'bg-amber-900/40 border-amber-400 text-amber-300 shadow-lg' : 'bg-blue-400 border-blue-600 text-white shadow-lg shadow-blue-200') : (darkMode ? 'bg-gray-700 border-gray-600 text-gray-200 shadow-md' : 'bg-gray-100 border-gray-300 text-gray-800 shadow-md')}`}>{n.val}</div>
             <div className={`text-xl ${darkMode ? 'text-gray-500' : 'text-blue-400'}`}>→</div>
@@ -359,20 +525,50 @@ export default function DSAVisualizer() {
 
   /* ---------- control handlers ---------- */
 
-  function togglePlay() {
+  const togglePlay = useCallback(() => {
     if (steps.length === 0) return;
     setPlaying(p => !p);
-  }
+  }, [steps.length]);
 
-  function stepForward() {
+  const stepForward = useCallback(() => {
     setIndex(i => Math.min(i + 1, Math.max(0, steps.length - 1)));
     setPlaying(false);
-  }
+  }, [steps.length]);
 
-  function stepBack() {
+  const stepBack = useCallback(() => {
     setIndex(i => Math.max(0, i - 1));
     setPlaying(false);
-  }
+  }, []);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (steps.length === 0) return;
+      
+      switch(e.key) {
+        case ' ': // Space - Play/Pause
+          e.preventDefault();
+          togglePlay();
+          break;
+        case 'ArrowRight': // Right arrow - Next step
+          e.preventDefault();
+          stepForward();
+          break;
+        case 'ArrowLeft': // Left arrow - Previous step
+          e.preventDefault();
+          stepBack();
+          break;
+        case 'Escape': // Escape - Stop playing
+          if (playing) setPlaying(false);
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [steps.length, playing, togglePlay, stepForward, stepBack]);
 
   function handleIndexChange(e) {
     const v = Number(e.target.value);
@@ -399,35 +595,66 @@ export default function DSAVisualizer() {
   return (
     <div className={`min-h-screen w-full transition-colors duration-300 ${darkMode ? 'bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800' : 'bg-gradient-to-br from-slate-50 via-blue-50 to-gray-50'}`}>
       <div className="flex flex-col min-h-screen">
-        <header className={`flex-none py-8 px-8 backdrop-blur-sm border-b shadow-sm transition-colors duration-300 ${darkMode ? 'bg-gray-800/80 border-gray-700/60' : 'bg-white/90 border-blue-200'}`}>
+        {/* Compact Header */}
+        <header className={`flex-none py-4 px-6 backdrop-blur-sm border-b shadow-sm transition-colors duration-300 ${darkMode ? 'bg-gray-800/80 border-gray-700/60' : 'bg-white/90 border-blue-200'}`}>
           <div className="max-w-full flex items-center justify-between">
             <div>
-              <h1 className={`text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight ${darkMode ? 'bg-gradient-to-r from-cyan-300 to-blue-400 bg-clip-text text-transparent' : 'text-blue-900'}`}>DSA Visualizer</h1>
-              <p className={`text-lg md:text-xl mt-3 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Interactive steps and visual explanations for common algorithms & data structures.</p>
+              <h1 className={`text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight ${darkMode ? 'bg-gradient-to-r from-cyan-300 to-blue-400 bg-clip-text text-transparent' : 'text-blue-900'}`}>DSA Visualizer</h1>
+              <p className={`text-sm md:text-base ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Interactive algorithm & data structure visualization</p>
             </div>
             <button
               onClick={() => setDarkMode(!darkMode)}
-              className={`p-3 rounded-xl transition-all duration-300 ${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-blue-400' : 'bg-blue-50 hover:bg-blue-100 text-blue-700'} shadow-md hover:shadow-lg`}
+              className={`p-2.5 rounded-lg transition-all duration-300 ${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-blue-400' : 'bg-blue-50 hover:bg-blue-100 text-blue-700'} shadow-md hover:shadow-lg`}
               aria-label="Toggle dark mode"
             >
-              {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+              {darkMode ? <Sun size={18} /> : <Moon size={18} />}
             </button>
           </div>
         </header>
 
-        <main className="flex-1 overflow-auto p-6">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-full">
+        <main className="flex-1 overflow-auto p-4">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 h-full">
             <div className="md:col-span-5 flex flex-col h-full">
-              <div className={`flex-1 rounded-2xl border p-6 shadow-lg h-full transition-colors duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-blue-200 shadow-blue-50'}`}>
+              <div className={`flex-1 rounded-xl border p-4 shadow-lg h-full transition-colors duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-blue-200 shadow-blue-50'}`}>
                 <div className="flex flex-col h-full">
-                  <div className="flex gap-3 mb-4">
-                    <select value={concept} onChange={(e) => setConcept(e.target.value)} className={`flex-1 px-4 py-2.5 rounded-lg border outline-none transition-all font-medium ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'}`}>
+                  <div className="flex gap-2 mb-3">
+                    <select value={concept} onChange={(e) => setConcept(e.target.value)} className={`flex-1 px-3 py-2 text-sm rounded-lg border outline-none transition-all font-medium ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500'}`}>
                       {Object.keys(concepts).map((c) => (<option key={c} value={c}>{c}</option>))}
                     </select>
-                    <select value={algorithm} onChange={(e) => setAlgorithm(e.target.value)} className={`w-44 px-4 py-2.5 rounded-lg border outline-none transition-all font-medium ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'}`}>
+                    <select value={algorithm} onChange={(e) => setAlgorithm(e.target.value)} className={`flex-1 px-3 py-2 text-sm rounded-lg border outline-none transition-all font-medium ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400' : 'bg-blue-50 text-gray-800 border-blue-300 focus:border-blue-500'}`}>
                       {concepts[concept].map((alg) => (<option key={alg} value={alg}>{alg}</option>))}
                     </select>
                   </div>
+
+                  {/* Compact Algorithm Info */}
+                  {algorithmInfo[algorithm] && (
+                    <div className={`mb-3 p-3 rounded-lg border transition-all ${darkMode ? 'bg-gradient-to-br from-blue-900/20 to-cyan-900/20 border-blue-700/50' : 'bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-300'}`}>
+                      <div className="flex items-start gap-2 mb-2">
+                        <BookOpen size={16} className={darkMode ? 'text-cyan-400 mt-0.5' : 'text-blue-600 mt-0.5'} />
+                        <div className="flex-1">
+                          <h3 className={`font-bold text-xs mb-1 ${darkMode ? 'text-cyan-300' : 'text-blue-800'}`}>{algorithm}</h3>
+                          <p className={`text-xs leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{algorithmInfo[algorithm].description}</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className={`flex items-center gap-1 text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                          <Zap size={12} className={darkMode ? 'text-yellow-400' : 'text-yellow-600'} />
+                          <span className="font-medium">Time:</span>
+                          <code className={`px-1 py-0.5 rounded text-xs font-mono ${darkMode ? 'bg-gray-700 text-cyan-300' : 'bg-white text-blue-700'}`}>{algorithmInfo[algorithm].timeComplexity}</code>
+                        </div>
+                        <div className={`flex items-center gap-1 text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                          <Info size={12} className={darkMode ? 'text-green-400' : 'text-green-600'} />
+                          <span className="font-medium">Space:</span>
+                          <code className={`px-1 py-0.5 rounded text-xs font-mono ${darkMode ? 'bg-gray-700 text-cyan-300' : 'bg-white text-blue-700'}`}>{algorithmInfo[algorithm].spaceComplexity}</code>
+                        </div>
+                      </div>
+                      {algorithmInfo[algorithm].bestFor && (
+                        <div className={`mt-2 text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                          <span className="font-semibold">Best for:</span> {algorithmInfo[algorithm].bestFor}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   <div className="space-y-4 mb-4">
                     {(concept === 'Sorting' || concept === 'Searching' || (concept === 'Data Structures' && ['Heapify', 'LinkedList Reverse'].includes(algorithm)) || (concept === 'Algorithms' && ['Kadane (Max Subarray)'].includes(algorithm)) || (concept === 'Trees') || (concept === 'Two Pointers / Sliding Window' && algorithm === 'Max Window Sum (k)')) && (
@@ -482,7 +709,11 @@ export default function DSAVisualizer() {
                     )}
                   </div>
 
-                  <div className="mt-auto flex gap-3 justify-center">
+                  <div className="mt-auto flex gap-3 justify-center flex-wrap">
+                    <button onClick={loadExample} className={`px-5 py-2.5 rounded-lg font-semibold border-2 transition-all flex items-center gap-2 ${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-cyan-300 border-cyan-700 hover:border-cyan-500' : 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-300 hover:border-blue-500'}`}>
+                      <Info size={18} />
+                      Load Example
+                    </button>
                     <button onClick={handleApply} className={`px-6 py-2.5 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all ${darkMode ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white' : 'bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white'}`}>Apply</button>
                     <button onClick={resetAll} className={`px-6 py-2.5 rounded-lg font-semibold border-2 transition-all ${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-200 border-gray-600' : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-300 hover:border-gray-400'}`}>Reset</button>
                   </div>
@@ -490,11 +721,11 @@ export default function DSAVisualizer() {
               </div>
             </div>
 
-            <div className="md:col-span-7 flex flex-col gap-4 h-full">
-              <div className={`rounded-2xl border p-6 shadow-lg flex flex-col h-full transition-colors duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-blue-200 shadow-blue-50'}`}>
-                <h2 className={`text-xl font-bold mb-4 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Visualization</h2>
+            <div className="md:col-span-7 flex flex-col gap-3 h-full">
+              <div className={`rounded-xl border p-4 shadow-lg flex flex-col h-full transition-colors duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-blue-200 shadow-blue-50'}`}>
+                <h2 className={`text-lg font-bold mb-3 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Visualization</h2>
 
-                <div className="flex-1 w-full flex items-center justify-center mb-4 overflow-auto">
+                <div className="flex-1 w-full flex items-center justify-center mb-3 overflow-auto">
                   <div className="w-full">
                     {/* show readable error or no-step message if steps empty */}
                     {steps.length === 0 && (
@@ -560,15 +791,15 @@ export default function DSAVisualizer() {
                   </div>
                 </div>
 
-                <div className={`w-full p-5 rounded-xl border shadow-md transition-colors duration-300 ${darkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-blue-50 border-blue-200'}`}>
-                  <div className="flex items-center justify-center gap-4 mb-4">
-                    <button onClick={stepBack} className={`p-2.5 rounded-lg border-2 transition-all shadow-sm ${darkMode ? 'bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600 hover:border-cyan-400' : 'bg-white border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-500'}`}><SkipBack size={20} /></button>
-                    <button onClick={togglePlay} className={`p-3 rounded-lg border-2 text-white transition-all shadow-md ${darkMode ? 'bg-gradient-to-r from-cyan-500 to-blue-600 border-cyan-600 hover:from-cyan-600 hover:to-blue-700' : 'bg-gradient-to-r from-blue-500 to-blue-700 border-blue-600 hover:from-blue-600 hover:to-blue-800'}`}>{playing ? <Pause size={20} /> : <Play size={20} />}</button>
-                    <button onClick={stepForward} className={`p-2.5 rounded-lg border-2 transition-all shadow-sm ${darkMode ? 'bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600 hover:border-cyan-400' : 'bg-white border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-500'}`}><SkipForward size={20} /></button>
+                <div className={`w-full p-3 rounded-lg border shadow-md transition-colors duration-300 ${darkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-blue-50 border-blue-200'}`}>
+                  <div className="flex items-center justify-center gap-3 mb-2">
+                    <button onClick={stepBack} title="Previous step (or press left arrow)" className={`p-2 rounded-lg border transition-all shadow-sm ${darkMode ? 'bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600 hover:border-cyan-400' : 'bg-white border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-500'}`}><SkipBack size={18} /></button>
+                    <button onClick={togglePlay} title={playing ? "Pause animation (or press space)" : "Play animation (or press space)"} className={`p-2.5 rounded-lg border text-white transition-all shadow-md ${darkMode ? 'bg-gradient-to-r from-cyan-500 to-blue-600 border-cyan-600 hover:from-cyan-600 hover:to-blue-700' : 'bg-gradient-to-r from-blue-500 to-blue-700 border-blue-600 hover:from-blue-600 hover:to-blue-800'}`}>{playing ? <Pause size={18} /> : <Play size={18} />}</button>
+                    <button onClick={stepForward} title="Next step (or press right arrow)" className={`p-2 rounded-lg border transition-all shadow-sm ${darkMode ? 'bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600 hover:border-cyan-400' : 'bg-white border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-500'}`}><SkipForward size={18} /></button>
 
-                    <div className="ml-6 flex items-center gap-2">
-                      <div className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Speed (ms)</div>
-                      <input type="number" value={speed} onChange={handleSpeedChange} className={`w-24 px-3 py-1.5 rounded-lg border-2 outline-none transition-all ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20' : 'bg-white text-gray-800 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'}`} />
+                    <div className="ml-4 flex items-center gap-2">
+                      <div className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Speed (ms)</div>
+                      <input type="number" value={speed} onChange={handleSpeedChange} title="Animation speed in milliseconds" className={`w-20 px-2 py-1 text-sm rounded-lg border outline-none transition-all ${darkMode ? 'bg-gray-700 text-gray-100 border-gray-600 focus:border-cyan-400' : 'bg-white text-gray-800 border-blue-300 focus:border-blue-500'}`} />
                     </div>
                   </div>
 
@@ -581,37 +812,37 @@ export default function DSAVisualizer() {
                       onChange={handleIndexChange}
                       className={`w-full h-2 rounded-lg appearance-none cursor-pointer ${darkMode ? 'bg-gray-600 accent-cyan-500' : 'bg-blue-200 accent-blue-500'}`}
                     />
-                    <div className={`flex justify-between text-xs mt-1.5 font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <div className={`flex justify-between text-xs mt-1 font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                       <div>0</div>
                       <div>{steps.length > 0 ? steps.length - 1 : 0}</div>
                     </div>
 
-                    <div className="mt-3 text-center">
-                      <div className={`font-semibold text-base ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>{cur.description || 'No step'}</div>
-                      <div className={`text-xs mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{`Step ${index} of ${Math.max(0, steps.length - 1)}`}</div>
+                    <div className="mt-2 text-center">
+                      <div className={`font-semibold text-sm ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>{cur.description || 'No step'}</div>
+                      <div className={`text-xs mt-0.5 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{`Step ${index} of ${Math.max(0, steps.length - 1)}`}</div>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-4">
-                  <div className={`border-2 p-5 rounded-xl shadow-md transition-colors duration-300 ${darkMode ? 'bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700' : 'bg-gradient-to-br from-blue-50 to-gray-50 border-blue-200'}`}>
-                    <h3 className={`font-bold text-lg mb-4 text-center ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Legend</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-blue-400 border-2 border-blue-600 rounded-lg shadow-sm" />
-                        <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Window / Pointer</span>
+                <div className="mt-3">
+                  <div className={`border p-3 rounded-lg shadow-md transition-colors duration-300 ${darkMode ? 'bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700' : 'bg-gradient-to-br from-blue-50 to-gray-50 border-blue-200'}`}>
+                    <h3 className={`font-bold text-sm mb-2 text-center ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Legend</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-blue-400 border border-blue-600 rounded shadow-sm" />
+                        <span className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Window / Pointer</span>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-pink-400 border-2 border-pink-600 rounded-lg shadow-sm" />
-                        <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Pivot</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-pink-400 border border-pink-600 rounded shadow-sm" />
+                        <span className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Pivot</span>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-orange-400 border-2 border-orange-600 rounded-lg shadow-sm" />
-                        <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Swapping</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-orange-400 border border-orange-600 rounded shadow-sm" />
+                        <span className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Swapping</span>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-green-400 border-2 border-green-600 rounded-lg shadow-sm" />
-                        <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Best / Result</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-green-400 border border-green-600 rounded shadow-sm" />
+                        <span className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>Best / Result</span>
                       </div>
                     </div>
                   </div>
